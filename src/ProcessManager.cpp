@@ -1,15 +1,15 @@
-#include "ProcMem.h"
+#include "ProcessManager.h"
 
 using namespace std;
 
 #pragma region Misc Functions
 
-ProcMem::ProcMem()
+ProcessManager::ProcessManager()
 {
 	//Constructor For Class, Do Not Remove!
 }
 
-ProcMem::~ProcMem()
+ProcessManager::~ProcessManager()
 {
 	//De-Constructor
 	//Clean Up! (Close Handle - Not Needed Anymore)
@@ -19,7 +19,7 @@ ProcMem::~ProcMem()
 #pragma region Memory Functions
 
 /* This Function Will Return A Handle To The Process So We Can Write & Read Memeory From The Process. */
-void ProcMem::Process(char* ProcessName)
+void ProcessManager::Process(const char* ProcessName)
 {
 	//Variables
 	HANDLE hPID = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL); //Snapshot To View All Active Processes
@@ -28,7 +28,7 @@ void ProcMem::Process(char* ProcessName)
 
 	//Loop Through All Running Processes To Find Process
 	do
-		if (!strcmp(ProcEntry.szExeFile, ProcessName))
+		if (!wcscmp(ProcEntry.szExeFile, (LPWSTR)ProcessName))
 		{
 			//Store Process ID
 			dwPID = ProcEntry.th32ProcessID;
@@ -45,7 +45,7 @@ void ProcMem::Process(char* ProcessName)
 	exit(0);
 }
 
-bool ProcMem::DataCompare(BYTE* data, BYTE* sign, char* mask)
+bool ProcessManager::DataCompare(BYTE* data, BYTE* sign, char* mask)
 {
 	for (; *mask; mask++, sign++, data++) // zzZ really?...
 	{
@@ -57,7 +57,7 @@ bool ProcMem::DataCompare(BYTE* data, BYTE* sign, char* mask)
 	return true;
 }
 
-DWORD ProcMem::FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask)
+DWORD ProcessManager::FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask)
 {
 	MEMORY_BASIC_INFORMATION mbi = {0};
 	DWORD offset = 0;
@@ -87,7 +87,7 @@ DWORD ProcMem::FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask)
 
 /* Returns The Base Address Of The Specified Module Inside The Target Process
 /* e.g.[ Module("client.dll"); ]. */
-MODULEENTRY32 ProcMem::Module(LPSTR ModuleName)
+MODULEENTRY32 ProcessManager::Module(const char* ModuleName)
 {
 	//Variables
 	HANDLE hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
@@ -97,38 +97,39 @@ MODULEENTRY32 ProcMem::Module(LPSTR ModuleName)
 
 	//Scan For Module By Name
 	do
-		if (!strcmp(mEntry.szModule, ModuleName))
+          if (!wcscmp(mEntry.szModule, (LPWSTR)ModuleName))
 		{
 			CloseHandle(hModule);
 			return mEntry;
 		}
 	while (Module32Next(hModule, &mEntry));
-	
+
 	throw "Could not find module, retrying...";
 }
 
-DWORD ProcMem::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, char* mask, scandefintions_t def)
+DWORD ProcessManager::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def)
 {
 	if (def == scandefintions_t::read)
 	{
-		DWORD initAddress = FindSignature(mod, modsize, sig, mask);
+		DWORD initAddress = FindSignature(mod, modsize, sig, (char*)mask);
 		DWORD ptrAddress = Read<DWORD>(initAddress);
 		return ptrAddress - mod;
 	}
 
 	if (def == scandefintions_t::subtract)
-		return (FindSignature(mod, modsize, sig, mask)) - mod;
+          return (FindSignature(mod, modsize, sig, (char*)mask)) - mod;
 
 	if (def == scandefintions_t::none)
-		return FindSignature(mod, modsize, sig, mask);
+          return FindSignature(mod, modsize, sig, (char*)mask);
 }
 
 // TODO: for reading with extra offset?
-DWORD ProcMem::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, char* mask, scandefintions_t def, int extra)
-{ 
+DWORD ProcessManager::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def,
+                                  int extra)
+{
 	if (def == scandefintions_t::read)
 	{
-		DWORD initAddress = FindSignature(mod, modsize, sig, mask);
+    DWORD initAddress = FindSignature(mod, modsize, sig, (char*)mask);
 		DWORD ptrAddress = Read<DWORD>(initAddress + extra);
 		return ptrAddress - mod;
 	}
