@@ -9,11 +9,6 @@
 #include <string> //Support For Strings
 #include <sstream> //Supports Data Conversion
 
-using std::cout;
-using std::endl;
-using std::uppercase;
-using std::hex;
-
 enum scandefintions_t
 {
 	none,
@@ -22,7 +17,7 @@ enum scandefintions_t
 };
 
 class ProcessManager
-{
+{ // todo: refactor the process manager
 protected:
 	//STORAGE
 	HANDLE hProcess;
@@ -76,8 +71,8 @@ public:
 
 	//MEMORY FUNCTION PROTOTYPES
 	virtual void Process(const char* ProcessName); //Return Handle To The Process
-	DWORD FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def);
-	DWORD FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def, int extra);
+	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def);
+	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def, int extra);
 	virtual bool DataCompare(BYTE* data, BYTE* sign, char* mask);
 	virtual DWORD FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask);
 	virtual MODULEENTRY32 Module(const char* ModuleName); // Return Module Base Address
