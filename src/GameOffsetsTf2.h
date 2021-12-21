@@ -2,7 +2,9 @@
 #define GAMEOFFSET_H
 
 #include <Windows.h>
-#include "ProcMem.h"
+#include <fstream>
+
+#include "ProcessManager.h"
 
 #define FOREGROUND_WHITE		    (FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN)
 #define FOREGROUND_YELLOW       	(FOREGROUND_RED | FOREGROUND_GREEN)
@@ -60,11 +62,11 @@ struct Offsets
 	DWORD dwViewAngles;
 } Offset;
 
-class GameOffsetTf2
+class GameOffsetsTf2
 {
 public:
-	GameOffsetTf2();
-	~GameOffsetTf2();
+	GameOffsetsTf2();
+	~GameOffsetsTf2();
 
 	// Getters /////////////////////////////////////////////
 	DWORD dwClient() const { return dwClient_; }
@@ -97,7 +99,7 @@ public:
 
 
 private:
-	ProcMem* procMem;
+	ProcessManager* procMem;
 
 	// DLL Modules
 	DWORD dwClient_;

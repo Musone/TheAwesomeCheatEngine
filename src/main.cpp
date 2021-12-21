@@ -1,7 +1,7 @@
-#include "GameOffsetTf2.h"
-#include "ProcMem.h"
+#include "GameOffsetsTf2.h"
+#include "ProcessManager.h"
 // #include "CNetVar.h"
-#include <fstream>
+// #include <fstream>
 #include <stdio.h>
 #include <ctype.h>
 #include <ctime>
@@ -13,11 +13,11 @@ using std::endl;
 using std::uppercase;
 using std::hex;
 
-ProcMem Mem;
+ProcessManager Mem;
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 bool close = false;
 
-void PrintOffset(char* gname, DWORD offset)
+void PrintOffset(const char* gname, DWORD offset)
 {
 	SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSE_WHITE);
 	cout << gname << " : ";
@@ -91,20 +91,20 @@ void PrintOffset(char* gname, DWORD offset)
 int main()
 {
 	//Resizing and formatting the window, it's important.
-	SetConsoleTitle("TF2 Offset Dumper by Your mom, bech");
+	SetConsoleTitle(L"TF2 Offset Dumper by Your mom, bech");
 	HWND window = GetConsoleWindow();
 	MoveWindow(window, 100, 100, 480, 480, true);
 
 
 	// POLL GAME WINDOW ////////////////////////////////////////////
-	if (!FindWindow(NULL, "Team Fortress 2"))
+	if (!FindWindow(NULL, L"Team Fortress 2"))
 	{
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 		cout << "Please Open TF2" << endl;
 		SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSE_WHITE);
 	}
 
-	while (!FindWindow(NULL, "Team Fortress 2")) { Sleep(500); }
+	while (!FindWindow(NULL, L"Team Fortress 2")) { Sleep(500); }
 	system("cls"); //Clears the console
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
 	cout << "TF2 has been found." << endl << endl;
@@ -122,7 +122,7 @@ int main()
 		try
 		{
 			MODULEENTRY32 client_dll = Mem.Module("client.dll");
-			MODULEENTRY32 engine_dll = Mem.Module("engine.dll");
+			MODULEENTRY32 engine_dll = Mem.Module("client.dll");
 
 			Offset.dwClient = (DWORD)client_dll.modBaseAddr; // Get the module
 			Offset.dwClientSize = client_dll.modBaseSize;
@@ -206,7 +206,7 @@ int main()
 	PrintOffset("dwIsInGame", Offset.dwIsInGame); // Printing the offset for formatting
 
 	Offset.dwIsConnected = (DWORD)(Mem.FindAddress(Offset.dwEngine, Offset.dwEngineSize,
-	                                               (PBYTE)
+	                                               (BYTE*)
 	                                               "\x80\x3D\x00\x00\x00\x00\x00\x0F\x85\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x6A\x00",
 	                                               "xx?????xx????x????xx", scandefintions_t::read, 2));
 	PrintOffset("dwIsInConnected", Offset.dwIsConnected); // Printing the offset for formatting

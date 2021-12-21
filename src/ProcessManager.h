@@ -9,6 +9,11 @@
 #include <string> //Support For Strings
 #include <sstream> //Supports Data Conversion
 
+using std::cout;
+using std::endl;
+using std::uppercase;
+using std::hex;
+
 enum scandefintions_t
 {
 	none,
@@ -16,7 +21,7 @@ enum scandefintions_t
 	subtract
 };
 
-class ProcMem
+class ProcessManager
 {
 protected:
 	//STORAGE
@@ -28,13 +33,14 @@ protected:
 
 public:
 	//MISC FUNCTIONS
-	ProcMem();
-	~ProcMem();
+	ProcessManager();
+	~ProcessManager();
 
 	//READ MEMORY 
 	template <class cData>
 	cData Read(DWORD dwAddress)
-	{ // TODO: This uses the template class to dynamically decide the data type to read.
+	{
+		// TODO: This uses the template class to dynamically decide the data type to read.
 		cData cRead; //Generic Variable To Store Data
 		ReadProcessMemory(hProcess, (LPVOID)dwAddress, &cRead, sizeof(cData), NULL);
 		//Win API - Reads Data At Specified Location 
@@ -69,13 +75,12 @@ public:
 	}
 
 	//MEMORY FUNCTION PROTOTYPES
-	virtual void Process(char* ProcessName); //Return Handle To The Process
-	DWORD FindAddress(DWORD mod, DWORD modsize, BYTE* sig, char* mask, scandefintions_t def);
-	DWORD FindAddress(DWORD mod, DWORD modsize, BYTE* sig, char* mask, scandefintions_t def, int extra);
+	virtual void Process(const char* ProcessName); //Return Handle To The Process
+	DWORD FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def);
+	DWORD FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def, int extra);
 	virtual bool DataCompare(BYTE* data, BYTE* sign, char* mask);
 	virtual DWORD FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask);
-	virtual MODULEENTRY32 Module(LPSTR ModuleName); // Return Module Base Address
-
+	virtual MODULEENTRY32 Module(const char* ModuleName); // Return Module Base Address
 };
 
 #endif

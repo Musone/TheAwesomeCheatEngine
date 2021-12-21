@@ -1,6 +1,7 @@
-#include "GameOffsetTf2.h"
+#include "GameOffsetsTf2.h"
 
-void GameOffsetTf2::init()
+
+void GameOffsetsTf2::init()
 {
 	// todo: initialize procMem
 	throw "procMem stub";
@@ -31,11 +32,11 @@ void GameOffsetTf2::init()
 	dwViewAngles_ = 0;
 }
 
-GameOffsetTf2::GameOffsetTf2() { init(); }
+GameOffsetsTf2::GameOffsetsTf2() { init(); }
 
-GameOffsetTf2::~GameOffsetTf2() { delete[] procMem; }
+GameOffsetsTf2::~GameOffsetsTf2() { delete[] procMem; }
 
-void GameOffsetTf2::getOffsets() { throw "stub"; }
+void GameOffsetsTf2::getOffsets() { throw "stub"; }
 
 
 void save() {
