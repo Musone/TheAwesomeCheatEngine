@@ -6,13 +6,10 @@ using namespace std;
 
 ProcessManager::ProcessManager()
 {
-	//Constructor For Class, Do Not Remove!
 }
 
 ProcessManager::~ProcessManager()
 {
-	//De-Constructor
-	//Clean Up! (Close Handle - Not Needed Anymore)
 	CloseHandle(hProcess);
 }
 
@@ -97,7 +94,7 @@ MODULEENTRY32 ProcessManager::Module(const char* ModuleName)
 
 	//Scan For Module By Name
 	do
-          if (!wcscmp(mEntry.szModule, (LPWSTR)ModuleName))
+		if (!wcscmp(mEntry.szModule, (LPWSTR)ModuleName))
 		{
 			CloseHandle(hModule);
 			return mEntry;
@@ -107,7 +104,7 @@ MODULEENTRY32 ProcessManager::Module(const char* ModuleName)
 	throw "Could not find module, retrying...";
 }
 
-DWORD ProcessManager::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def)
+DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def)
 {
 	if (def == scandefintions_t::read)
 	{
@@ -117,19 +114,19 @@ DWORD ProcessManager::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const cha
 	}
 
 	if (def == scandefintions_t::subtract)
-          return (FindSignature(mod, modsize, sig, (char*)mask)) - mod;
+		return (FindSignature(mod, modsize, sig, (char*)mask)) - mod;
 
 	if (def == scandefintions_t::none)
-          return FindSignature(mod, modsize, sig, (char*)mask);
+		return FindSignature(mod, modsize, sig, (char*)mask);
 }
 
 // TODO: for reading with extra offset?
-DWORD ProcessManager::FindAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def,
+DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def,
                                   int extra)
 {
 	if (def == scandefintions_t::read)
 	{
-    DWORD initAddress = FindSignature(mod, modsize, sig, (char*)mask);
+		DWORD initAddress = FindSignature(mod, modsize, sig, (char*)mask);
 		DWORD ptrAddress = Read<DWORD>(initAddress + extra);
 		return ptrAddress - mod;
 	}

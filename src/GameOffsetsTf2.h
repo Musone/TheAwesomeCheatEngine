@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <fstream>
+#include <ctime>
 
 #include "ProcessManager.h"
 
@@ -20,51 +21,17 @@
 #define FOREGROUND_INTENSE_CYAN		(FOREGROUND_CYAN | FOREGROUND_INTENSITY)
 #define FOREGROUND_INTENSE_MAGENTA	(FOREGROUND_MAGENTA | FOREGROUND_INTENSITY)
 
-struct Offsets
-{
-	//DLL Module Shit
 
-	DWORD dwClient;
-	DWORD dwClientSize;
-
-	DWORD dwEngine;
-	DWORD dwEngineSize;
-
-
-	//Offsets
-
-	DWORD dwLocalPlayer;
-	DWORD dwEntityList;
-
-	DWORD dwButtonBase;
-	DWORD dwButtonBase_2;
-	DWORD dwDuck;
-	DWORD dwMoveForwards;
-	DWORD dwMoveBackwards;
-
-	DWORD dwJump;
-	DWORD dwAttack;
-	DWORD dwAttack2;
-
-	DWORD dwMoveLeft;
-	DWORD dwMoveRight;
-
-	DWORD dwLeft;
-	DWORD dwRight;
-
-	DWORD dwGetMaxClients;
-	DWORD dwIsInGame;
-	DWORD dwIsConnected;
-
-	DWORD dwGlowObjectManager;
-	DWORD dwWorldToScreen;
-
-	DWORD dwViewAngles;
-} Offset;
+using std::cout;
+using std::hex;
+using std::uppercase;
+using std::endl;
 
 class GameOffsetsTf2
 {
-public:
+  // typedef scandefintions_t::read read;
+
+ public:
 	GameOffsetsTf2();
 	~GameOffsetsTf2();
 
@@ -95,11 +62,12 @@ public:
 	DWORD dwViewAngles() const { return dwViewAngles_; }
 	///////////////////////////////////////////////////////////
 
-	void save();
+	void save(const char*);
+	void printOffsets();
 
 
 private:
-	ProcessManager* procMem;
+	ProcessManager* procManager_;
 
 	// DLL Modules
 	DWORD dwClient_;
@@ -138,6 +106,8 @@ private:
 	DWORD dwViewAngles_;
 
 	void init();
-	void getOffsets();
+	void loadProcess();
+	void loadOffsets();
+	void printOffset(const char* gname, DWORD offset);
 };
 #endif  // GAMEOFFSET_H
