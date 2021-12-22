@@ -13,6 +13,7 @@ using std::cout;
 
 int main()
 {
+	//hello
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	GameOffsetsTf2* offsetsTf2;
 
