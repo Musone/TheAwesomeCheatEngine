@@ -6,7 +6,7 @@
 #include <ctype.h>
 // #include <ctime>
 
-#pragma warning(disable : 4996)
+// #pragma warning(disable : 4996)
 
 using std::cin;
 using std::cout;
@@ -31,14 +31,16 @@ int main()
 	}
 
 	while (!FindWindow(NULL, L"Team Fortress 2")) { Sleep(500); }
-	system("cls"); //Clears the console
+
+	cout << endl;
+
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
 	cout << "TF2 has been found." << endl << endl;
 	SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSE_WHITE);
 	////////////////////////////////////////////////////////////////
 
 	offsetsTf2 = new GameOffsetsTf2();
-
+	offsetsTf2->printOffsets();
 
 	char yn;
 
@@ -47,10 +49,10 @@ int main()
 	cout << "Do you want to save to a file [Y] Yes | [N] No : ";
 	cin >> yn;
 
-	if (yn == 'Y' || yn == 'y') offsetsTf2->save("Tf2_offsets.txt");
+	// todo: concat the file name to the out path in the save method.
+	if (yn == 'Y' || yn == 'y') offsetsTf2->save(".\\out\\Tf2_offsets.txt");
 
-	cout << "Bye!";
+	cout << "Bye!" << endl;
 	Sleep(300);
 	return 0;
-
 }

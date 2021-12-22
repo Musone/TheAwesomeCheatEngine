@@ -2,8 +2,6 @@
 
 using namespace std;
 
-#pragma region Misc Functions
-
 ProcessManager::ProcessManager()
 {
 }
@@ -13,21 +11,20 @@ ProcessManager::~ProcessManager()
 	CloseHandle(hProcess);
 }
 
-#pragma region Memory Functions
 
-/* This Function Will Return A Handle To The Process So We Can Write & Read Memeory From The Process. */
-void ProcessManager::Process(const char* ProcessName)
+/* This Function Will Return A Handle To The process So We Can Write & read Memeory From The process. */
+void ProcessManager::process(LPCWSTR ProcessName)
 {
 	//Variables
 	HANDLE hPID = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL); //Snapshot To View All Active Processes
 	PROCESSENTRY32 ProcEntry;
 	ProcEntry.dwSize = sizeof(ProcEntry); //Declare Structure Size And Populate It
 
-	//Loop Through All Running Processes To Find Process
+	//Loop Through All Running Processes To Find process
 	do
-		if (!wcscmp(ProcEntry.szExeFile, (LPWSTR)ProcessName))
+		if (!wcscmp(ProcEntry.szExeFile, ProcessName))
 		{
-			//Store Process ID
+			//Store process ID
 			dwPID = ProcEntry.th32ProcessID;
 			CloseHandle(hPID);
 
@@ -42,7 +39,7 @@ void ProcessManager::Process(const char* ProcessName)
 	exit(0);
 }
 
-bool ProcessManager::DataCompare(BYTE* data, BYTE* sign, char* mask)
+bool ProcessManager::pataCompare(BYTE* data, BYTE* sign, char* mask)
 {
 	for (; *mask; mask++, sign++, data++) // zzZ really?...
 	{
@@ -54,7 +51,7 @@ bool ProcessManager::DataCompare(BYTE* data, BYTE* sign, char* mask)
 	return true;
 }
 
-DWORD ProcessManager::FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask)
+DWORD ProcessManager::findSignature(DWORD base, DWORD size, BYTE* sign, char* mask)
 {
 	MEMORY_BASIC_INFORMATION mbi = {0};
 	DWORD offset = 0;
@@ -65,9 +62,9 @@ DWORD ProcessManager::FindSignature(DWORD base, DWORD size, BYTE* sign, char* ma
 		{
 			BYTE* buffer = new BYTE[mbi.RegionSize];
 			ReadProcessMemory(hProcess, mbi.BaseAddress, buffer, mbi.RegionSize, NULL);
-			for (int i = 0; i < mbi.RegionSize; i++)
+			for (SIZE_T i = 0; i < mbi.RegionSize; i++)
 			{
-				if (DataCompare(buffer + i, sign, mask))
+				if (pataCompare(buffer + i, sign, mask))
 				{
 					delete[] buffer;
 					return (DWORD)mbi.BaseAddress + i;
@@ -82,19 +79,18 @@ DWORD ProcessManager::FindSignature(DWORD base, DWORD size, BYTE* sign, char* ma
 }
 
 
-/* Returns The Base Address Of The Specified Module Inside The Target Process
-/* e.g.[ Module("client.dll"); ]. */
-MODULEENTRY32 ProcessManager::Module(const char* ModuleName)
-{
+/* Returns The Base Address Of The Specified module Inside The Target process
+/* e.g.[ module("client.dll"); ]. */
+MODULEENTRY32 ProcessManager::module(LPCWSTR ModuleName) {
 	//Variables
 	HANDLE hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
-	//Take A Module Snapshot Of The Process (Grab All Loaded Modules)
-	MODULEENTRY32 mEntry; //Declare Module Entry Structure
+	//Take A module Snapshot Of The process (Grab All Loaded Modules)
+	MODULEENTRY32 mEntry; //Declare module Entry Structure
 	mEntry.dwSize = sizeof(mEntry); //Declare Structure Size And Populate It With Loaded Modules ??? why ???
 
-	//Scan For Module By Name
+	//Scan For module By Name
 	do
-		if (!wcscmp(mEntry.szModule, (LPWSTR)ModuleName))
+		if (!wcscmp(mEntry.szModule, ModuleName))
 		{
 			CloseHandle(hModule);
 			return mEntry;
@@ -108,16 +104,16 @@ DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const cha
 {
 	if (def == scandefintions_t::read)
 	{
-		DWORD initAddress = FindSignature(mod, modsize, sig, (char*)mask);
-		DWORD ptrAddress = Read<DWORD>(initAddress);
+		DWORD initAddress = findSignature(mod, modsize, sig, (char*)mask);
+		DWORD ptrAddress = read<DWORD>(initAddress);
 		return ptrAddress - mod;
 	}
 
 	if (def == scandefintions_t::subtract)
-		return (FindSignature(mod, modsize, sig, (char*)mask)) - mod;
+		return (findSignature(mod, modsize, sig, (char*)mask)) - mod;
 
 	if (def == scandefintions_t::none)
-		return FindSignature(mod, modsize, sig, (char*)mask);
+		return findSignature(mod, modsize, sig, (char*)mask);
 }
 
 // TODO: for reading with extra offset?
@@ -126,9 +122,29 @@ DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const cha
 {
 	if (def == scandefintions_t::read)
 	{
-		DWORD initAddress = FindSignature(mod, modsize, sig, (char*)mask);
-		DWORD ptrAddress = Read<DWORD>(initAddress + extra);
+		DWORD initAddress = findSignature(mod, modsize, sig, (char*)mask);
+		DWORD ptrAddress = read<DWORD>(initAddress + extra);
 		return ptrAddress - mod;
 	}
 }
-#pragma endregion
+
+
+template <class cData>
+cData ProcessManager::read(DWORD dwAddress) {
+  // TODO: This uses the template class to dynamically decide the data type to
+  // read.
+  cData cRead;  // Generic Variable To Store Data
+  ReadProcessMemory(hProcess, (LPVOID)dwAddress, &cRead, sizeof(cData), NULL);
+  // Win API - Reads Data At Specified Location
+  return cRead;  // Returns Value At Specified dwAddress
+}
+
+template <class cData>
+cData ProcessManager::readString(DWORD dwAddress) {
+  cData csRead;  // Generic Variable To Store Data
+  ReadProcessMemory(hProcess, (LPVOID)dwAddress, &csRead, 32 * sizeof(cData),
+                    NULL);
+  // Win API - Reads Data At Specified Location
+  return csRead;  // Returns Value At Specified dwAddress
+}
+
