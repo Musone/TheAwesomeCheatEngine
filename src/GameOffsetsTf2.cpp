@@ -32,7 +32,7 @@ void GameOffsetsTf2::init()
 
 void GameOffsetsTf2::loadProcess()
 {
-	procManager_->Process("hl2.exe");
+	procManager_->process(L"hl2.exe");
 
 	while (!dwClient_ && !dwEngine_)
 	{
@@ -40,8 +40,8 @@ void GameOffsetsTf2::loadProcess()
 		// module size?
 		try
 		{
-			MODULEENTRY32 client_dll = procManager_->Module("client.dll");
-			MODULEENTRY32 engine_dll = procManager_->Module("engine.dll");
+			MODULEENTRY32 client_dll = procManager_->module(L"client.dll");
+			MODULEENTRY32 engine_dll = procManager_->module(L"engine.dll");
 
 			dwClient_ = (DWORD)client_dll.modBaseAddr; // Get the module
 			dwClientSize_ = client_dll.modBaseSize;
@@ -71,7 +71,6 @@ GameOffsetsTf2::~GameOffsetsTf2() { delete[] procManager_; }
 void GameOffsetsTf2::save(const char* destFile)
 {
 	std::ofstream saveF;
-
 	saveF.open(destFile); // Defines the file
 
 	time_t theTime = time(NULL);
@@ -140,10 +139,8 @@ void GameOffsetsTf2::save(const char* destFile)
 
 void GameOffsetsTf2::printOffsets()
 {
-	printOffset("dwLocalPlayer",
-	            dwLocalPlayer_); // Printing the offset for formatting
-	printOffset("dwEntityList",
-	            dwEntityList_); // Printing the offset for formatting
+	printOffset("dwLocalPlayer", dwLocalPlayer_); // Printing the offset for formatting
+	printOffset("dwEntityList", dwEntityList_); // Printing the offset for formatting
 
 	cout << endl;
 
@@ -202,7 +199,7 @@ void GameOffsetsTf2::loadOffsets()
 	dwEntityList_ = procManager_->findAddress(
 		dwClient_, dwClientSize_,
 		(PBYTE)"\xA1\x00\x00\x00\x00\xA8\x01\x75\x51\x83\xC8\x01",
-            "x????xxxxxxx", scandefintions_t::read,
+		"x????xxxxxxx", scandefintions_t::read,
 		1); // Sig scanning for entitylist address.
 	dwEntityList_ += 0x18;
 
@@ -222,7 +219,7 @@ void GameOffsetsTf2::loadOffsets()
 	dwGetMaxClients_ =
 		(DWORD)(procManager_->findAddress(dwEngine_, dwEngineSize_,
 		                                  (PBYTE)"\x83\x3D\x00\x00\x00\x00\x00\x75\x38", "xx?????xx",
-            scandefintions_t::read, 2));
+		                                  scandefintions_t::read, 2));
 
 	dwIsInGame_ = (DWORD)(procManager_->findAddress(
 		dwEngine_, dwEngineSize_,
@@ -233,12 +230,12 @@ void GameOffsetsTf2::loadOffsets()
 		dwEngine_, dwEngineSize_,
 		(BYTE*)"\x80\x3D\x00\x00\x00\x00\x00\x0F\x85\x00\x00\x00\x00\xE8\x00\x00"
 		"\x00\x00\x6A\x00",
-            "xx?????xx????x????xx", scandefintions_t::read, 2));
+		"xx?????xx????x????xx", scandefintions_t::read, 2));
 
 	dwGlowObjectManager_ = (DWORD)(procManager_->findAddress(
 		dwClient_, dwClientSize_,
 		(PBYTE)"\xB9\x00\x00\x00\x00\xE8\x00\x00\x00\x00\xB0\x01\x5D",
-            "x????x????xxx", scandefintions_t::read, 1));
+		"x????x????xxx", scandefintions_t::read, 1));
 
 
 	// World to screen is here but I'm not sure if it is the correct offset so I'm

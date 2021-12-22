@@ -21,6 +21,7 @@
 #define FOREGROUND_INTENSE_CYAN		(FOREGROUND_CYAN | FOREGROUND_INTENSITY)
 #define FOREGROUND_INTENSE_MAGENTA	(FOREGROUND_MAGENTA | FOREGROUND_INTENSITY)
 
+#pragma warning(disable : 4996)
 
 using std::cout;
 using std::hex;
@@ -29,8 +30,6 @@ using std::endl;
 
 class GameOffsetsTf2
 {
-  // typedef scandefintions_t::read read;
-
  public:
 	GameOffsetsTf2();
 	~GameOffsetsTf2();

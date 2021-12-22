@@ -3,11 +3,13 @@
 
 #define WIN32_LEAN_AND_MEAN //Excludes Headers We Wont Use (Increase Compile Time)
 
-#include <windows.h> //Standard Windows Functions/Data Types
+#include <Windows.h> //Standard Windows Functions/Data Types
 #include <iostream> //Constains Input/Output Functions (cin/cout etc..)
-#include <TlHelp32.h> //Contains Read/Write Functions
+#include <TlHelp32.h> //Contains read/Write Functions
 #include <string> //Support For Strings
 #include <sstream> //Supports Data Conversion
+
+#pragma warning(disable : 4996)
 
 enum scandefintions_t
 {
@@ -17,7 +19,8 @@ enum scandefintions_t
 };
 
 class ProcessManager
-{ // todo: refactor the process manager
+{
+	// todo: refactor the process manager
 protected:
 	//STORAGE
 	HANDLE hProcess;
@@ -27,55 +30,23 @@ protected:
 	BOOL bPOn, bIOn, bProt;
 
 public:
-	//MISC FUNCTIONS
 	ProcessManager();
 	~ProcessManager();
 
-	//READ MEMORY 
+	//READ MEMORY
 	template <class cData>
-	cData Read(DWORD dwAddress)
-	{
-		// TODO: This uses the template class to dynamically decide the data type to read.
-		cData cRead; //Generic Variable To Store Data
-		ReadProcessMemory(hProcess, (LPVOID)dwAddress, &cRead, sizeof(cData), NULL);
-		//Win API - Reads Data At Specified Location 
-		return cRead; //Returns Value At Specified dwAddress
-	}
-
+	cData read(DWORD dwAddress);
 	template <class cData>
-	cData ReadString(DWORD dwAddress)
-	{
-		cData csRead; //Generic Variable To Store Data
-		ReadProcessMemory(hProcess, (LPVOID)dwAddress, &csRead, 32 * sizeof(cData), NULL);
-		//Win API - Reads Data At Specified Location 
-		return csRead; //Returns Value At Specified dwAddress
-	}
+	cData readString(DWORD dwAddress);
 
-	//READ MEMORY - Pointer
-	template <class cData>
-	cData Read(DWORD dwAddress, char* Offset, BOOL Type)
-	{
-		//Variables
-		int iSize = iSizeOfArray(Offset) - 1; //Size Of *Array Of Offsets 
-		dwAddress = Read<DWORD>(dwAddress); //HEX VAL
+	void process(LPCWSTR ProcessName); //Return Handle To The process
+    MODULEENTRY32 module(LPCWSTR ModuleName);  // Return module Base Address
 
-		//Loop Through Each Offset & Store Hex Value (Address)
-		for (int i = 0; i < iSize; i++)
-			dwAddress = Read<DWORD>(dwAddress + Offset[i]);
-
-		if (!Type)
-			return dwAddress + Offset[iSize]; //FALSE - Return Address
-		else
-			return Read<cData>(dwAddress + Offset[iSize]); //TRUE - Return Value
-	}
-
-	//MEMORY FUNCTION PROTOTYPES
-	virtual void Process(const char* ProcessName); //Return Handle To The Process
 	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def);
 	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def, int extra);
-	virtual bool DataCompare(BYTE* data, BYTE* sign, char* mask);
-	virtual DWORD FindSignature(DWORD base, DWORD size, BYTE* sign, char* mask);
-	virtual MODULEENTRY32 Module(const char* ModuleName); // Return Module Base Address
+	bool pataCompare(BYTE* data, BYTE* sign, char* mask);
+	DWORD findSignature(DWORD base, DWORD size, BYTE* sign, char* mask);
+	
 };
 
 #endif

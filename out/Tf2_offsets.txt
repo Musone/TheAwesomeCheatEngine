@@ -1,0 +1,23 @@
+[TF2 Offset Dump | 21/12/2021 16:10:55] 
+
+dwLocalPlayer : 0xC3F6D0
+dwEntityList : 0xC4D1F4
+
+dwDuck : 0xC6E4A4
+dwLeft : 0xC6D410
+dwRight : 0xC6D41C
+
+dwMoveLeft : 0xC6D464
+dwMoveRight : 0xC6D470
+dwMoveForward : 0xC6F414
+dwMoveBackwards : 0xC6F408
+
+dwJump : 0xC6E468
+dwAttack : 0xC6E474
+dwAttack2 : 0xC6E480
+
+dwGetMaxClients : 0x462BA4
+dwIsInGame : 0x462A20
+dwIsConnected : 0x5977C9
+dwGlowObjectManager : 0xBD7BD4
+dwViewAngles : 0x467474
