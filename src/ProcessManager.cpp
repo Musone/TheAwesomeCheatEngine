@@ -15,35 +15,42 @@ ProcessManager::~ProcessManager()
 /* This Function Will Return A Handle To The process So We Can Write & read Memeory From The process. */
 void ProcessManager::process(LPCWSTR ProcessName)
 {
-	//Variables
-	HANDLE hPID = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL); //Snapshot To View All Active Processes
-	PROCESSENTRY32 ProcEntry;
-	ProcEntry.dwSize = sizeof(ProcEntry); //Declare Structure Size And Populate It
+	while (1)
+	{
+		//Variables
+		HANDLE hPID = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL); //Snapshot To View All Active Processes
+		PROCESSENTRY32 ProcEntry;
+		ProcEntry.dwSize = sizeof(ProcEntry); //Declare Structure Size And Populate It
 
-	//Loop Through All Running Processes To Find process
-	do
-		if (!wcscmp(ProcEntry.szExeFile, ProcessName))
-		{
-			//Store process ID
-			dwPID = ProcEntry.th32ProcessID;
-			CloseHandle(hPID);
+		//Loop Through All Running Processes To Find process
+		do
+			if (!wcscmp(ProcEntry.szExeFile, ProcessName))
+			{
+				//Store process ID
+				dwPID = ProcEntry.th32ProcessID;
+				CloseHandle(hPID);
 
-			//Give Our Handle All Access Rights 
-			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPID);
-			return;
-		}
-	while (Process32Next(hPID, &ProcEntry));
+				//Give Our Handle All Access Rights 
+				hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPID);
+				cout << endl;
+				return;
+			}
+		while (Process32Next(hPID, &ProcEntry));
 
-	cout << "You haven't even started the game yet.";
-	system("pause");
-	exit(0);
+		cout << "Start the game niga\n";
+		Sleep(5000);
+	}
 }
 
-bool ProcessManager::pataCompare(BYTE* data, BYTE* sign, char* mask)
+bool ProcessManager::sigEqual(BYTE* data, BYTE* sig, char* mask)
 {
-	for (; *mask; mask++, sign++, data++) // zzZ really?...
+	// todo: there is no check here for if the the data pointer exceeds the region's bounds... I think it still works
+	// todo: because the region is alligned to the # of bytes in our signature... (aligned to 12 bytes?... or just luck...)
+	for (; *mask; mask++, sig++, data++) // zzZ really?... actually this is really smart lol...
 	{
-		if (*mask == 'x' && *data != *sign)
+		// todo: this is iterating over the mask checking for wildcards...
+		// todo: *mask is a null terminated string, so when the byte is 0, we know its the end. genius
+		if (*mask == 'x' && *data != *sig)
 		{
 			return false;
 		}
@@ -51,22 +58,30 @@ bool ProcessManager::pataCompare(BYTE* data, BYTE* sign, char* mask)
 	return true;
 }
 
-DWORD ProcessManager::findSignature(DWORD base, DWORD size, BYTE* sign, char* mask)
+DWORD ProcessManager::findSignature(DWORD base, DWORD size, BYTE* sig, char* mask)
 {
-	MEMORY_BASIC_INFORMATION mbi = {0};
+	MEMORY_BASIC_INFORMATION mbi = {0}; // I think this is init'ing with 0's
 	DWORD offset = 0;
+
 	while (offset < size) // TODO: while still in module
 	{
 		VirtualQueryEx(hProcess, (LPCVOID)(base + offset), &mbi, sizeof(MEMORY_BASIC_INFORMATION));
+
+
 		if (mbi.State != MEM_FREE)
 		{
+			// todo: does region represent a page??? What exactly is a "region"...
 			BYTE* buffer = new BYTE[mbi.RegionSize];
 			ReadProcessMemory(hProcess, mbi.BaseAddress, buffer, mbi.RegionSize, NULL);
+
+
 			for (SIZE_T i = 0; i < mbi.RegionSize; i++)
 			{
-				if (pataCompare(buffer + i, sign, mask))
+				// todo: iterates over the entire region, checking if signature matches.
+				if (sigEqual(buffer + i, sig, mask))
 				{
 					delete[] buffer;
+					// todo: returns the virtual address of the signature
 					return (DWORD)mbi.BaseAddress + i;
 				}
 			}
@@ -81,7 +96,8 @@ DWORD ProcessManager::findSignature(DWORD base, DWORD size, BYTE* sign, char* ma
 
 /* Returns The Base Address Of The Specified module Inside The Target process
 /* e.g.[ module("client.dll"); ]. */
-MODULEENTRY32 ProcessManager::module(LPCWSTR ModuleName) {
+MODULEENTRY32 ProcessManager::module(LPCWSTR ModuleName)
+{
 	//Variables
 	HANDLE hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
 	//Take A module Snapshot Of The process (Grab All Loaded Modules)
@@ -100,51 +116,49 @@ MODULEENTRY32 ProcessManager::module(LPCWSTR ModuleName) {
 	throw "Could not find module, retrying...";
 }
 
-DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def)
+// TODO: for reading with extra offset? I am suspicious to the integrity of the offsets this method is returning...
+DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, int extra)
 {
-	if (def == scandefintions_t::read)
+	//todo: what is extra???? Why do we need extra??? What the fuck is this???
+
+	DWORD initAddress = findSignature(mod, modsize, sig, (char*)mask);
+
+	if (!initAddress)
 	{
-		DWORD initAddress = findSignature(mod, modsize, sig, (char*)mask);
-		DWORD ptrAddress = read<DWORD>(initAddress);
-		return ptrAddress - mod;
+		throw "could not find signature";
 	}
-
-	if (def == scandefintions_t::subtract)
-		return (findSignature(mod, modsize, sig, (char*)mask)) - mod;
-
-	if (def == scandefintions_t::none)
-		return findSignature(mod, modsize, sig, (char*)mask);
+	
+	// todo: modify how we are finding and overriding signatures.
+	DWORD ptrAddress = read<DWORD>(initAddress + extra);
+	return ptrAddress - mod; // todo: this is the offset
 }
 
-// TODO: for reading with extra offset?
-DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def,
-                                  int extra)
+
+void ProcessManager::writeAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
 {
-	if (def == scandefintions_t::read)
-	{
-		DWORD initAddress = findSignature(mod, modsize, sig, (char*)mask);
-		DWORD ptrAddress = read<DWORD>(initAddress + extra);
-		return ptrAddress - mod;
-	}
+	cout << "#bytes " << nBytes << endl;
+	if (!WriteProcessMemory(hProcess, (LPVOID)addr, buff, nBytes, NULL))
+		throw "(ProcessManager/writeAddress) Could not write to memory process";
 }
 
 
 template <class cData>
-cData ProcessManager::read(DWORD dwAddress) {
-  // TODO: This uses the template class to dynamically decide the data type to
-  // read.
-  cData cRead;  // Generic Variable To Store Data
-  ReadProcessMemory(hProcess, (LPVOID)dwAddress, &cRead, sizeof(cData), NULL);
-  // Win API - Reads Data At Specified Location
-  return cRead;  // Returns Value At Specified dwAddress
+cData ProcessManager::read(DWORD dwAddress)
+{
+	// TODO: This uses the template class to dynamically decide the data type to
+	// read.
+	cData cRead; // Generic Variable To Store Data
+	ReadProcessMemory(hProcess, (LPVOID)dwAddress, &cRead, sizeof(cData), NULL);
+	// Win API - Reads Data At Specified Location
+	return cRead; // Returns Value At Specified dwAddress
 }
 
 template <class cData>
-cData ProcessManager::readString(DWORD dwAddress) {
-  cData csRead;  // Generic Variable To Store Data
-  ReadProcessMemory(hProcess, (LPVOID)dwAddress, &csRead, 32 * sizeof(cData),
-                    NULL);
-  // Win API - Reads Data At Specified Location
-  return csRead;  // Returns Value At Specified dwAddress
+cData ProcessManager::readString(DWORD dwAddress)
+{
+	cData csRead; // Generic Variable To Store Data
+	ReadProcessMemory(hProcess, (LPVOID)dwAddress, &csRead, 32 * sizeof(cData),
+	                  NULL);
+	// Win API - Reads Data At Specified Location
+	return csRead; // Returns Value At Specified dwAddress
 }
-

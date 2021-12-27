@@ -28,10 +28,21 @@ using std::hex;
 using std::uppercase;
 using std::endl;
 
+#define PITCH_OFFSET 0x467474
+#define YAW_OFFSET PITCH_OFFSET + 4
+
+typedef struct PlayerInfo
+{
+	DWORD hp;
+	float x;
+	float y;
+	float z;
+} PlayerInfo_t;
+
 class GameOffsetsTf2
 {
- public:
-	GameOffsetsTf2();
+public:
+	GameOffsetsTf2(ProcessManager* proc);
 	~GameOffsetsTf2();
 
 	// Getters /////////////////////////////////////////////
@@ -59,11 +70,16 @@ class GameOffsetsTf2
 	DWORD dwGlowObjectManager() const { return dwGlowObjectManager_; }
 	DWORD dwWorldToScreen() const { return dwWorldToScreen_; }
 	DWORD dwViewAngles() const { return dwViewAngles_; }
+	DWORD dwPitch() const { return dwPitch_; }
+	DWORD dwYaw() const { return dwYaw_; }
 	///////////////////////////////////////////////////////////
 
 	void save(const char*);
 	void printOffsets();
+	PlayerInfo_t getPlayerInfo(DWORD index);
 
+
+	DWORD testGetAmmo();
 
 private:
 	ProcessManager* procManager_;
@@ -76,6 +92,10 @@ private:
 	DWORD dwEngineSize_;
 
 	// Offsets
+	DWORD ptrPlayerX_;
+	DWORD ptrPlayerY_;
+	DWORD ptrPlayerZ_;
+
 	DWORD dwLocalPlayer_;
 	DWORD dwEntityList_;
 
@@ -104,9 +124,14 @@ private:
 
 	DWORD dwViewAngles_;
 
-	void init();
+	DWORD dwPitch_;
+	DWORD dwYaw_;
+
+	void init(ProcessManager* proc);
 	void loadProcess();
 	void loadOffsets();
 	void printOffset(const char* gname, DWORD offset);
+	void getEntityListBasePtr();
+	void getViewAngles();
 };
 #endif  // GAMEOFFSET_H

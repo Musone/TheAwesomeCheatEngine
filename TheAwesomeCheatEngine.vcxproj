@@ -19,16 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Tf2Aimbot.cpp" />
     <ClCompile Include="src\GameOffsetsTf2.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ProcessManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Tf2Aimbot.h" />
     <ClInclude Include="src\GameOffsetsTf2.h" />
     <ClInclude Include="src\ProcessManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="out\Tf2_offsets.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

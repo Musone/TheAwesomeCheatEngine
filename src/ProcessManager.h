@@ -11,24 +11,9 @@
 
 #pragma warning(disable : 4996)
 
-enum scandefintions_t
-{
-	none,
-	read,
-	subtract
-};
-
 class ProcessManager
 {
 	// todo: refactor the process manager
-protected:
-	//STORAGE
-	HANDLE hProcess;
-	DWORD dwPID, dwProtection, dwCaveAddress;
-
-	//MISC
-	BOOL bPOn, bIOn, bProt;
-
 public:
 	ProcessManager();
 	~ProcessManager();
@@ -40,12 +25,23 @@ public:
 	cData readString(DWORD dwAddress);
 
 	void process(LPCWSTR ProcessName); //Return Handle To The process
-    MODULEENTRY32 module(LPCWSTR ModuleName);  // Return module Base Address
+	MODULEENTRY32 module(LPCWSTR ModuleName); // Return module Base Address
 
-	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def);
-	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, scandefintions_t def, int extra);
-	bool pataCompare(BYTE* data, BYTE* sign, char* mask);
-	DWORD findSignature(DWORD base, DWORD size, BYTE* sign, char* mask);
+	// todo: remove the unused garbage...
+	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, int extra);
+	void writeAddress(DWORD addr, BYTE* buff, SIZE_T nBytes);
+	DWORD findSignature(DWORD base, DWORD size, BYTE* sig, char* mask);
+private:
+	// STORAGE
+	HANDLE hProcess;
+	DWORD dwPID, dwProtection, dwCaveAddress;
+
+	// todo: this reads compares the our current position to the signature.
+	// todo: add safety for if you try to read outside of the VAS of the process.
+	bool sigEqual(BYTE* data, BYTE* sig, char* mask);
+
+	// MISC
+	BOOL bPOn, bIOn, bProt;
 	
 };
 

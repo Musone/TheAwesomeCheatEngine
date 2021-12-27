@@ -1,0 +1,25 @@
+mov [edi], eax
+
+
+2701A2A0 start
+
+2701A300 ret
+
+
+
+
+server.dll
+The signature
+55 8B EC 56 57 8B 7D 08 8B F1 85 FF 7E 4F 53 8B 5D 0C 53 E8 58 33 29 00 8B C8 E8 41 CB FE FF 83 F8 FE 74 38 8B 84 9E C4 06 00 00 33 C9 2B C7 8D BB B1 01 00 00 85 C0 8D 3C BE 0F 4F C8 8B 07 89 4D 08 89 4D 0C 8D 4D 08 3B 01 74 10 8B 06 8B CE 57 FF 90 1C 05 00 00 8B 45 0C 89 07 5B 5F 5E 5D C2 08 00
+
+99 bytes
+"xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxxx
+ xxxxxxxxx"
