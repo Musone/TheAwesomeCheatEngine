@@ -1,25 +1,11 @@
-#ifndef GAMEOFFSET_H
-#define GAMEOFFSET_H
+#pragma once
 
 #include <Windows.h>
 #include <fstream>
 #include <ctime>
 
+#include "IGameManager.h"
 #include "ProcessManager.h"
-
-#define FOREGROUND_WHITE		    (FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN)
-#define FOREGROUND_YELLOW       	(FOREGROUND_RED | FOREGROUND_GREEN)
-#define FOREGROUND_CYAN		        (FOREGROUND_BLUE | FOREGROUND_GREEN)
-#define FOREGROUND_MAGENTA	        (FOREGROUND_RED | FOREGROUND_BLUE)
-#define FOREGROUND_BLACK		    0
-
-#define FOREGROUND_INTENSE_RED		(FOREGROUND_RED | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_GREEN	(FOREGROUND_GREEN | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_BLUE		(FOREGROUND_BLUE | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_WHITE	(FOREGROUND_WHITE | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_YELLOW	(FOREGROUND_YELLOW | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_CYAN		(FOREGROUND_CYAN | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_MAGENTA	(FOREGROUND_MAGENTA | FOREGROUND_INTENSITY)
 
 #pragma warning(disable : 4996)
 
@@ -28,11 +14,15 @@ using std::hex;
 using std::uppercase;
 using std::endl;
 
-class GameOffsetsTf2
+#define PITCH_OFFSET 0x467474
+#define YAW_OFFSET PITCH_OFFSET + 4
+
+
+class Tf2GameManager : public IGameManager
 {
- public:
-	GameOffsetsTf2();
-	~GameOffsetsTf2();
+public:
+	Tf2GameManager(ProcessManager* proc);
+	~Tf2GameManager();
 
 	// Getters /////////////////////////////////////////////
 	DWORD dwClient() const { return dwClient_; }
@@ -59,11 +49,19 @@ class GameOffsetsTf2
 	DWORD dwGlowObjectManager() const { return dwGlowObjectManager_; }
 	DWORD dwWorldToScreen() const { return dwWorldToScreen_; }
 	DWORD dwViewAngles() const { return dwViewAngles_; }
+	DWORD dwPitchBase() const override { return dwPitch_; }
+	DWORD dwYawBase() const override { return dwYaw_; }
 	///////////////////////////////////////////////////////////
 
-	void save(const char*);
-	void printOffsets();
+	void printVerbose() override;
+	PlayerInfo_t getPlayerInfo(DWORD index) override;
+	PlayerInfo_t getLocalPlayerInfo() override { throw "stub"; };
+	ClientInfo_t getClientAtIndex(DWORD index) override { throw "stub"; };
 
+	void save(const char*);
+
+
+	DWORD testGetAmmo();
 
 private:
 	ProcessManager* procManager_;
@@ -76,6 +74,10 @@ private:
 	DWORD dwEngineSize_;
 
 	// Offsets
+	DWORD ptrPlayerX_;
+	DWORD ptrPlayerY_;
+	DWORD ptrPlayerZ_;
+
 	DWORD dwLocalPlayer_;
 	DWORD dwEntityList_;
 
@@ -104,9 +106,13 @@ private:
 
 	DWORD dwViewAngles_;
 
-	void init();
+	DWORD dwPitch_; // address of viewangle pitch
+	DWORD dwYaw_; // address of viewangle yaw
+
+	void init(ProcessManager* proc);
 	void loadProcess();
 	void loadOffsets();
 	void printOffset(const char* gname, DWORD offset);
+	void getEntityListBasePtr();
+	void getViewAngles();
 };
-#endif  // GAMEOFFSET_H

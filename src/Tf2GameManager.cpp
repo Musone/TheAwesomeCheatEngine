@@ -1,9 +1,8 @@
-#include "GameOffsetsTf2.h"
+#include "Tf2GameManager.h"
 
-
-void GameOffsetsTf2::init()
+void Tf2GameManager::init(ProcessManager* proc)
 {
-	procManager_ = new ProcessManager();
+	procManager_ = proc;
 	dwClient_ = 0;
 	dwClientSize_ = 0;
 	dwEngine_ = 0;
@@ -28,16 +27,108 @@ void GameOffsetsTf2::init()
 	dwGlowObjectManager_ = 0;
 	dwWorldToScreen_ = 0;
 	dwViewAngles_ = 0;
+	dwPitch_ = 0;
+	dwYaw_ = 0;
 }
 
-void GameOffsetsTf2::loadProcess()
+Tf2GameManager::Tf2GameManager(ProcessManager* proc)
+{
+	// todo: init the process manager in Aimbot class instead of here.
+	init(proc);
+	loadProcess();
+	getEntityListBasePtr();
+	getViewAngles();
+
+	// todo: figure out if I need the rest of the offsets that are setup in this shit
+	// loadOffsets();
+}
+
+Tf2GameManager::~Tf2GameManager()
+{
+	// todo: don't delete here because technically Tf2Aimbot owns the process.
+}
+
+void Tf2GameManager::getViewAngles()
+{
+	dwPitch_ = dwEngine_ + PITCH_OFFSET;
+	dwYaw_ = dwEngine_ + YAW_OFFSET;
+}
+
+PlayerInfo_t Tf2GameManager::getPlayerInfo(DWORD index)
+{
+	const DWORD clientInfoSize = 0x10;
+	const DWORD hpOffset = 0xA8;
+	const DWORD xOffset = 0x28c;
+	const DWORD yOffset = 0x290;
+	const DWORD zOffset = 0x294;
+	const DWORD observermodeOffset = 0x109C;
+	const DWORD cursoridOffset = 0x177C;
+
+	DWORD x, y, z;
+	PlayerInfo_t playerInfo;
+
+	DWORD entityListIndex = dwEntityList_ + index * clientInfoSize;
+
+	DWORD entityBase = procManager_->read<DWORD>(entityListIndex);
+	//todo: testing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DWORD entityBase;
+	// if (index == 1)
+	// {
+	// 	entityBase = 0x6025F6C8;
+	// }
+	// else
+	// {
+	// 	entityBase = procManager_->read<DWORD>(entityListIndex);
+	// }
+
+	//todo: testing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	x = procManager_->read<DWORD>(entityBase + xOffset);
+	y = procManager_->read<DWORD>(entityBase + yOffset);
+	z = procManager_->read<DWORD>(entityBase + zOffset);
+
+	playerInfo.hp = procManager_->read<DWORD>(entityBase + hpOffset);
+	playerInfo.x = *(float*)&x;
+	playerInfo.y = *(float*)&y;
+	playerInfo.z = *(float*)&z;
+	playerInfo.observermode = procManager_->read<DWORD>(entityBase + observermodeOffset);
+	playerInfo.cursorid = procManager_->read<DWORD>(entityBase + cursoridOffset);
+
+	return playerInfo;
+}
+
+
+void Tf2GameManager::getEntityListBasePtr()
+{
+	BYTE sig[] = {
+		0xA1, 0x00, 0x00, 0x00, 0x00, 0xA8,
+		0x01, 0x75, 0x51, 0x83, 0xC8, 0x01
+	};
+	char mask[] = "x????xxxxxxx";
+	DWORD signatureBase = procManager_->findSignature(dwClient_,
+	                                                  dwClientSize_,
+	                                                  sig,
+	                                                  mask); // Sig scanning for entitylist address.
+
+	if (!signatureBase)
+		throw "could not find signature";
+
+
+	dwEntityList_ = procManager_->read<DWORD>(signatureBase + 1);
+	// todo: why do we add magic number 0x18?
+	dwEntityList_ += 0x18;
+
+	// todo: subtract if you want the offset
+	// dwEntityList_ -= dwClient_;
+}
+
+void Tf2GameManager::loadProcess()
 {
 	procManager_->process(L"hl2.exe");
 
 	while (!dwClient_ && !dwEngine_)
 	{
-		// why tf did the guy iterate over the process list again for the
-		// module size?
 		try
 		{
 			MODULEENTRY32 client_dll = procManager_->module(L"client.dll");
@@ -57,18 +148,54 @@ void GameOffsetsTf2::loadProcess()
 	}
 }
 
-GameOffsetsTf2::GameOffsetsTf2()
+
+////// less important //////////////////////////////////////////////////////////////////////////////////////////////
+// todo: Fix the crap below ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// todo: testing my own signature scanner for the function that controls ammo reload.
+DWORD Tf2GameManager::testGetAmmo()
 {
-	// todo: init the process manager
-	init();
-	loadProcess();
-	loadOffsets();
+	BYTE sig[] = {
+		0x55, 0x8B, 0xEC, 0x56, 0x57, 0x8B, 0x7D, 0x08, 0x8B, 0xF1, 0x85, 0xFF, 0x7E, 0x4F, 0x53, 0x8B,
+		0x5D, 0x0C, 0x53, 0xE8, 0x58, 0x33, 0x29, 0x00, 0x8B, 0xC8, 0xE8, 0x41, 0xCB, 0xFE, 0xFF, 0x83,
+		0xF8, 0xFE, 0x74, 0x38, 0x8B, 0x84, 0x9E, 0xC4, 0x06, 0x00, 0x00, 0x33, 0xC9, 0x2B, 0xC7, 0x8D,
+		0xBB, 0xB1, 0x01, 0x00, 0x00, 0x85, 0xC0, 0x8D, 0x3C, 0xBE, 0x0F, 0x4F, 0xC8, 0x8B, 0x07, 0x89,
+		0x4D, 0x08, 0x89, 0x4D, 0x0C, 0x8D, 0x4D, 0x08, 0x3B, 0x01, 0x74, 0x10, 0x8B, 0x06, 0x8B, 0xCE,
+		0x57, 0xFF, 0x90, 0x1C, 0x05, 0x00, 0x00, 0x8B, 0x45, 0x0C, 0x89, 0x07, 0x5B, 0x5F, 0x5E, 0x5D,
+		0xC2, 0x08, 0x00
+	};
+	BYTE toWrite[] = {0x90, 0x90};
+	char bitMask[] =
+		"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+	DWORD overwriteAddr;
+	DWORD functionVA;
+	const DWORD offsetIntoFunction = 90;
+	MODULEENTRY32 server_dll;
+
+	try
+	{
+		server_dll = procManager_->module(L"server.dll");
+		functionVA = procManager_->findAddress((DWORD)server_dll.modBaseAddr,
+		                                       (DWORD)server_dll.modBaseSize,
+		                                       sig, (char*)bitMask, 0);
+
+		overwriteAddr = functionVA + offsetIntoFunction;
+		procManager_->writeAddress(overwriteAddr, toWrite, 2);
+
+		printOffset("TEST GET AMMO: ", overwriteAddr);
+		return overwriteAddr;
+	}
+	catch (const char* err)
+	{
+		cout << err << endl;
+		Sleep(5000);
+		exit(0);
+		return 0;
+	}
 }
 
-GameOffsetsTf2::~GameOffsetsTf2() { delete[] procManager_; }
 
-
-void GameOffsetsTf2::save(const char* destFile)
+void Tf2GameManager::save(const char* destFile)
 {
 	std::ofstream saveF;
 	saveF.open(destFile); // Defines the file
@@ -137,7 +264,7 @@ void GameOffsetsTf2::save(const char* destFile)
 }
 
 
-void GameOffsetsTf2::printOffsets()
+void Tf2GameManager::printVerbose()
 {
 	printOffset("dwLocalPlayer", dwLocalPlayer_); // Printing the offset for formatting
 	printOffset("dwEntityList", dwEntityList_); // Printing the offset for formatting
@@ -173,16 +300,15 @@ void GameOffsetsTf2::printOffsets()
 	cout << endl;
 }
 
-void GameOffsetsTf2::loadOffsets()
+void Tf2GameManager::loadOffsets()
 {
 	dwButtonBase_ = procManager_->findAddress(dwClient_, dwClientSize_,
 	                                          (PBYTE)"\x68\x00\x00\x00\x00\x8B\x40\x28\xFF\xD0\xA1",
-	                                          "x????xxxxxx", read, 1);
+	                                          "x????xxxxxx", 1);
 
-	dwButtonBase2_ = procManager_->findAddress(
-		dwClient_, dwClientSize_,
-		(PBYTE)"\xA1\x00\x00\x00\x00\x5E\xA8\x01\x75\x17",
-		"x????xxxxx", read, 1);
+	dwButtonBase2_ = procManager_->findAddress(dwClient_, dwClientSize_,
+	                                           (PBYTE)"\xA1\x00\x00\x00\x00\x5E\xA8\x01\x75\x17",
+	                                           "x????xxxxx", 1);
 
 	// Pattern Scanning for Local Player then printing.
 
@@ -193,14 +319,13 @@ void GameOffsetsTf2::loadOffsets()
 	dwLocalPlayer_ = procManager_->findAddress(
 		dwClient_, dwClientSize_,
 		(PBYTE)"\xA1\x00\x00\x00\x00\x33\xC9\x83\xC4\x04", "x????xxxxx",
-		read, 1); // Sig scanning for localplayer address.
+		1); // Sig scanning for localplayer address.
 
 	// todo: Whydoes the entity list have to be offset by 0x18
-	dwEntityList_ = procManager_->findAddress(
-		dwClient_, dwClientSize_,
-		(PBYTE)"\xA1\x00\x00\x00\x00\xA8\x01\x75\x51\x83\xC8\x01",
-		"x????xxxxxxx", scandefintions_t::read,
-		1); // Sig scanning for entitylist address.
+	dwEntityList_ = procManager_->findAddress(dwClient_, dwClientSize_,
+	                                          (PBYTE)"\xA1\x00\x00\x00\x00\xA8\x01\x75\x51\x83\xC8\x01",
+	                                          "x????xxxxxxx",
+	                                          1); // Sig scanning for entitylist address.
 	dwEntityList_ += 0x18;
 
 
@@ -219,23 +344,23 @@ void GameOffsetsTf2::loadOffsets()
 	dwGetMaxClients_ =
 		(DWORD)(procManager_->findAddress(dwEngine_, dwEngineSize_,
 		                                  (PBYTE)"\x83\x3D\x00\x00\x00\x00\x00\x75\x38", "xx?????xx",
-		                                  scandefintions_t::read, 2));
+		                                  2));
 
 	dwIsInGame_ = (DWORD)(procManager_->findAddress(
 		dwEngine_, dwEngineSize_,
 		(PBYTE)"\x83\x3D\x00\x00\x00\x00\x00\x0F\x9D\xC0\xC3", "xx?????xxxx",
-		read, 2));
+		2));
 
 	dwIsConnected_ = (DWORD)(procManager_->findAddress(
 		dwEngine_, dwEngineSize_,
 		(BYTE*)"\x80\x3D\x00\x00\x00\x00\x00\x0F\x85\x00\x00\x00\x00\xE8\x00\x00"
 		"\x00\x00\x6A\x00",
-		"xx?????xx????x????xx", scandefintions_t::read, 2));
+		"xx?????xx????x????xx", 2));
 
 	dwGlowObjectManager_ = (DWORD)(procManager_->findAddress(
 		dwClient_, dwClientSize_,
 		(PBYTE)"\xB9\x00\x00\x00\x00\xE8\x00\x00\x00\x00\xB0\x01\x5D",
-		"x????x????xxx", scandefintions_t::read, 1));
+		"x????x????xxx", 1));
 
 
 	// World to screen is here but I'm not sure if it is the correct offset so I'm
@@ -248,10 +373,10 @@ void GameOffsetsTf2::loadOffsets()
 
 	dwViewAngles_ = (DWORD)(procManager_->findAddress(dwEngine_, dwEngineSize_,
 	                                                  (PBYTE)"\xD9\x1D\x00\x00\x00\x00\xD9\x46\x04",
-	                                                  "xx????xxx", scandefintions_t::read, 2));
+	                                                  "xx????xxx", 2));
 }
 
-void GameOffsetsTf2::printOffset(const char* gname, DWORD offset)
+void Tf2GameManager::printOffset(const char* gname, DWORD offset)
 {
 	cout << gname << " : ";
 	cout << "0x";
