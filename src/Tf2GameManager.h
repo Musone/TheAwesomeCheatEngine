@@ -1,25 +1,11 @@
-#ifndef GAMEOFFSET_H
-#define GAMEOFFSET_H
+#pragma once
 
 #include <Windows.h>
 #include <fstream>
 #include <ctime>
 
+#include "IGameManager.h"
 #include "ProcessManager.h"
-
-#define FOREGROUND_WHITE		    (FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN)
-#define FOREGROUND_YELLOW       	(FOREGROUND_RED | FOREGROUND_GREEN)
-#define FOREGROUND_CYAN		        (FOREGROUND_BLUE | FOREGROUND_GREEN)
-#define FOREGROUND_MAGENTA	        (FOREGROUND_RED | FOREGROUND_BLUE)
-#define FOREGROUND_BLACK		    0
-
-#define FOREGROUND_INTENSE_RED		(FOREGROUND_RED | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_GREEN	(FOREGROUND_GREEN | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_BLUE		(FOREGROUND_BLUE | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_WHITE	(FOREGROUND_WHITE | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_YELLOW	(FOREGROUND_YELLOW | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_CYAN		(FOREGROUND_CYAN | FOREGROUND_INTENSITY)
-#define FOREGROUND_INTENSE_MAGENTA	(FOREGROUND_MAGENTA | FOREGROUND_INTENSITY)
 
 #pragma warning(disable : 4996)
 
@@ -31,19 +17,12 @@ using std::endl;
 #define PITCH_OFFSET 0x467474
 #define YAW_OFFSET PITCH_OFFSET + 4
 
-typedef struct PlayerInfo
-{
-	DWORD hp;
-	float x;
-	float y;
-	float z;
-} PlayerInfo_t;
 
-class GameOffsetsTf2
+class Tf2GameManager : public IGameManager
 {
 public:
-	GameOffsetsTf2(ProcessManager* proc);
-	~GameOffsetsTf2();
+	Tf2GameManager(ProcessManager* proc);
+	~Tf2GameManager();
 
 	// Getters /////////////////////////////////////////////
 	DWORD dwClient() const { return dwClient_; }
@@ -70,13 +49,16 @@ public:
 	DWORD dwGlowObjectManager() const { return dwGlowObjectManager_; }
 	DWORD dwWorldToScreen() const { return dwWorldToScreen_; }
 	DWORD dwViewAngles() const { return dwViewAngles_; }
-	DWORD dwPitch() const { return dwPitch_; }
-	DWORD dwYaw() const { return dwYaw_; }
+	DWORD dwPitchBase() const override { return dwPitch_; }
+	DWORD dwYawBase() const override { return dwYaw_; }
 	///////////////////////////////////////////////////////////
 
+	void printVerbose() override;
+	PlayerInfo_t getPlayerInfo(DWORD index) override;
+	PlayerInfo_t getLocalPlayerInfo() override { throw "stub"; };
+	ClientInfo_t getClientAtIndex(DWORD index) override { throw "stub"; };
+
 	void save(const char*);
-	void printOffsets();
-	PlayerInfo_t getPlayerInfo(DWORD index);
 
 
 	DWORD testGetAmmo();
@@ -124,8 +106,8 @@ private:
 
 	DWORD dwViewAngles_;
 
-	DWORD dwPitch_;
-	DWORD dwYaw_;
+	DWORD dwPitch_; // address of viewangle pitch
+	DWORD dwYaw_; // address of viewangle yaw
 
 	void init(ProcessManager* proc);
 	void loadProcess();
@@ -134,4 +116,3 @@ private:
 	void getEntityListBasePtr();
 	void getViewAngles();
 };
-#endif  // GAMEOFFSET_H

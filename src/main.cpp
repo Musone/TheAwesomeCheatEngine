@@ -1,15 +1,7 @@
-// #include "CNetVar.h"
-// #include <fstream>
 #include <stdio.h>
 #include <ctype.h>
-// #include <ctime>
-
-// #include "GameOffsetsTf2.h"
-// #include "ProcessManager.h"
 
 #include "Tf2Aimbot.h"
-
-// #pragma warning(disable : 4996)
 
 using std::cin;
 using std::cout;
@@ -18,7 +10,9 @@ void start()
 {
 	Tf2Aimbot* aimbot;
 	aimbot = new Tf2Aimbot();
-	aimbot->testTrackBot1();
+	aimbot->start();
+
+	delete aimbot;
 }
 
 int main()
@@ -37,20 +31,20 @@ int main()
 	{
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 		cout << "Please Open TF2" << endl;
-		SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSE_WHITE);
 	}
-
+	
 	while (!FindWindow(NULL, L"Team Fortress 2")) { Sleep(500); }
-
-
+	
+	
 	cout << endl;
-
+	
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
 	cout << "TF2 has been found." << endl << endl;
-	SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSE_WHITE);
 	////////////////////////////////////////////////////////////////
 
 	start();
+
+	cout << "Main says: balls\n";
 
 	// char yn;
 	//

@@ -1,6 +1,6 @@
-#include "GameOffsetsTf2.h"
+#include "Tf2GameManager.h"
 
-void GameOffsetsTf2::init(ProcessManager* proc)
+void Tf2GameManager::init(ProcessManager* proc)
 {
 	procManager_ = proc;
 	dwClient_ = 0;
@@ -31,7 +31,7 @@ void GameOffsetsTf2::init(ProcessManager* proc)
 	dwYaw_ = 0;
 }
 
-GameOffsetsTf2::GameOffsetsTf2(ProcessManager* proc)
+Tf2GameManager::Tf2GameManager(ProcessManager* proc)
 {
 	// todo: init the process manager in Aimbot class instead of here.
 	init(proc);
@@ -43,30 +43,46 @@ GameOffsetsTf2::GameOffsetsTf2(ProcessManager* proc)
 	// loadOffsets();
 }
 
-GameOffsetsTf2::~GameOffsetsTf2()
+Tf2GameManager::~Tf2GameManager()
 {
 	// todo: don't delete here because technically Tf2Aimbot owns the process.
 }
 
-void GameOffsetsTf2::getViewAngles()
+void Tf2GameManager::getViewAngles()
 {
 	dwPitch_ = dwEngine_ + PITCH_OFFSET;
 	dwYaw_ = dwEngine_ + YAW_OFFSET;
 }
 
-PlayerInfo_t GameOffsetsTf2::getPlayerInfo(DWORD index)
+PlayerInfo_t Tf2GameManager::getPlayerInfo(DWORD index)
 {
+	const DWORD clientInfoSize = 0x10;
 	const DWORD hpOffset = 0xA8;
 	const DWORD xOffset = 0x28c;
 	const DWORD yOffset = 0x290;
 	const DWORD zOffset = 0x294;
-	const DWORD clientInfoSize = 0x10;
+	const DWORD observermodeOffset = 0x109C;
+	const DWORD cursoridOffset = 0x177C;
 
 	DWORD x, y, z;
 	PlayerInfo_t playerInfo;
 
 	DWORD entityListIndex = dwEntityList_ + index * clientInfoSize;
+
 	DWORD entityBase = procManager_->read<DWORD>(entityListIndex);
+	//todo: testing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DWORD entityBase;
+	// if (index == 1)
+	// {
+	// 	entityBase = 0x6025F6C8;
+	// }
+	// else
+	// {
+	// 	entityBase = procManager_->read<DWORD>(entityListIndex);
+	// }
+
+	//todo: testing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	x = procManager_->read<DWORD>(entityBase + xOffset);
 	y = procManager_->read<DWORD>(entityBase + yOffset);
@@ -76,12 +92,14 @@ PlayerInfo_t GameOffsetsTf2::getPlayerInfo(DWORD index)
 	playerInfo.x = *(float*)&x;
 	playerInfo.y = *(float*)&y;
 	playerInfo.z = *(float*)&z;
+	playerInfo.observermode = procManager_->read<DWORD>(entityBase + observermodeOffset);
+	playerInfo.cursorid = procManager_->read<DWORD>(entityBase + cursoridOffset);
 
 	return playerInfo;
 }
 
 
-void GameOffsetsTf2::getEntityListBasePtr()
+void Tf2GameManager::getEntityListBasePtr()
 {
 	BYTE sig[] = {
 		0xA1, 0x00, 0x00, 0x00, 0x00, 0xA8,
@@ -105,7 +123,7 @@ void GameOffsetsTf2::getEntityListBasePtr()
 	// dwEntityList_ -= dwClient_;
 }
 
-void GameOffsetsTf2::loadProcess()
+void Tf2GameManager::loadProcess()
 {
 	procManager_->process(L"hl2.exe");
 
@@ -134,7 +152,7 @@ void GameOffsetsTf2::loadProcess()
 ////// less important //////////////////////////////////////////////////////////////////////////////////////////////
 // todo: Fix the crap below ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // todo: testing my own signature scanner for the function that controls ammo reload.
-DWORD GameOffsetsTf2::testGetAmmo()
+DWORD Tf2GameManager::testGetAmmo()
 {
 	BYTE sig[] = {
 		0x55, 0x8B, 0xEC, 0x56, 0x57, 0x8B, 0x7D, 0x08, 0x8B, 0xF1, 0x85, 0xFF, 0x7E, 0x4F, 0x53, 0x8B,
@@ -177,7 +195,7 @@ DWORD GameOffsetsTf2::testGetAmmo()
 }
 
 
-void GameOffsetsTf2::save(const char* destFile)
+void Tf2GameManager::save(const char* destFile)
 {
 	std::ofstream saveF;
 	saveF.open(destFile); // Defines the file
@@ -246,7 +264,7 @@ void GameOffsetsTf2::save(const char* destFile)
 }
 
 
-void GameOffsetsTf2::printOffsets()
+void Tf2GameManager::printVerbose()
 {
 	printOffset("dwLocalPlayer", dwLocalPlayer_); // Printing the offset for formatting
 	printOffset("dwEntityList", dwEntityList_); // Printing the offset for formatting
@@ -282,7 +300,7 @@ void GameOffsetsTf2::printOffsets()
 	cout << endl;
 }
 
-void GameOffsetsTf2::loadOffsets()
+void Tf2GameManager::loadOffsets()
 {
 	dwButtonBase_ = procManager_->findAddress(dwClient_, dwClientSize_,
 	                                          (PBYTE)"\x68\x00\x00\x00\x00\x8B\x40\x28\xFF\xD0\xA1",
@@ -358,7 +376,7 @@ void GameOffsetsTf2::loadOffsets()
 	                                                  "xx????xxx", 2));
 }
 
-void GameOffsetsTf2::printOffset(const char* gname, DWORD offset)
+void Tf2GameManager::printOffset(const char* gname, DWORD offset)
 {
 	cout << gname << " : ";
 	cout << "0x";

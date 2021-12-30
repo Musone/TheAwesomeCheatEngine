@@ -127,7 +127,7 @@ DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const cha
 	{
 		throw "could not find signature";
 	}
-	
+
 	// todo: modify how we are finding and overriding signatures.
 	DWORD ptrAddress = read<DWORD>(initAddress + extra);
 	return ptrAddress - mod; // todo: this is the offset
@@ -136,7 +136,7 @@ DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const cha
 
 void ProcessManager::writeAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
 {
-	cout << "#bytes " << nBytes << endl;
+	// cout << "#bytes " << nBytes << endl;
 	if (!WriteProcessMemory(hProcess, (LPVOID)addr, buff, nBytes, NULL))
 		throw "(ProcessManager/writeAddress) Could not write to memory process";
 }
@@ -152,6 +152,13 @@ cData ProcessManager::read(DWORD dwAddress)
 	// Win API - Reads Data At Specified Location
 	return cRead; // Returns Value At Specified dwAddress
 }
+
+void ProcessManager::readAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
+{
+	if (!ReadProcessMemory(hProcess, (LPVOID)addr, buff, nBytes, NULL))
+		throw "(ProcessManager/writeAddress) Could not write to memory process";
+}
+
 
 template <class cData>
 cData ProcessManager::readString(DWORD dwAddress)

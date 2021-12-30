@@ -1,5 +1,4 @@
-#ifndef PROCMEM_H
-#define PROCMEM_H
+#pragma once
 
 #define WIN32_LEAN_AND_MEAN //Excludes Headers We Wont Use (Increase Compile Time)
 
@@ -30,19 +29,17 @@ public:
 	// todo: remove the unused garbage...
 	DWORD findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, int extra);
 	void writeAddress(DWORD addr, BYTE* buff, SIZE_T nBytes);
+	void readAddress(DWORD addr, BYTE* buff, SIZE_T nBytes);
 	DWORD findSignature(DWORD base, DWORD size, BYTE* sig, char* mask);
 private:
 	// STORAGE
-	HANDLE hProcess;
-	DWORD dwPID, dwProtection, dwCaveAddress;
+	HANDLE hProcess = 0;
+	DWORD dwPID = 0, dwProtection = 0, dwCaveAddress = 0;
 
 	// todo: this reads compares the our current position to the signature.
 	// todo: add safety for if you try to read outside of the VAS of the process.
 	bool sigEqual(BYTE* data, BYTE* sig, char* mask);
 
 	// MISC
-	BOOL bPOn, bIOn, bProt;
-	
+	BOOL bPOn = 0, bIOn = 0, bProt = 0;
 };
-
-#endif
