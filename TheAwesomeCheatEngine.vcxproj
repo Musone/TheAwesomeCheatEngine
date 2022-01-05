@@ -24,6 +24,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ProcessManager.cpp" />
     <ClCompile Include="src\Tf2GameManagerV2.cpp" />
+    <ClCompile Include="src\TrackingSystem.cpp" />
     <ClCompile Include="Testing.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClInclude Include="src\Tf2GameManager.h" />
     <ClInclude Include="src\ProcessManager.h" />
     <ClInclude Include="src\Tf2GameManagerV2.h" />
+    <ClInclude Include="src\TrackingSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

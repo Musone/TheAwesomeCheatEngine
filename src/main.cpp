@@ -21,7 +21,7 @@ int main()
 
 
 	//Resizing and formatting the window, it's important.
-	SetConsoleTitle(L"TF2 Offset Dumper by Your mom, bech");
+	SetConsoleTitle(L"An Awesome Cheat Engine by Your mom, bech");
 	HWND window = GetConsoleWindow();
 	MoveWindow(window, 100, 100, 480, 480, true);
 
@@ -44,19 +44,7 @@ int main()
 
 	start();
 
-	cout << "Main says: balls\n";
-
-	// char yn;
-	//
-	// SetConsoleTextAttribute(hConsole, FOREGROUND_CYAN);
-	//
-	// cout << "Do you want to save to a file [Y] Yes | [N] No : ";
-	// cin >> yn;
-	//
-	// // todo: concat the file name to the out path in the save method.
-	// if (yn == 'Y' || yn == 'y') /*offsetsTf2->save(".\\out\\Tf2_offsets.txt")*/;
-	//
-	// cout << "Bye!" << endl;
+	cout << "Main says: Quitting, Cya!\n";
 	Sleep(300);
 	return 0;
 }

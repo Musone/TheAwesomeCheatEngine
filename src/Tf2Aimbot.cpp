@@ -8,245 +8,98 @@ using namespace std::chrono;
 Tf2Aimbot::Tf2Aimbot()
 {
 	procManager_ = new ProcessManager();
-	//todo: process is being initialized by GameOffset. Should be initialized here...
-	// gameManager_ = new Tf2GameManager(procManager_);
 	gameManager_ = new Tf2GameManagerV2(procManager_);
-	mutex_ = CreateMutexA(NULL, TRUE, NULL);
+	trackingSystem_ = new TrackingSystem(procManager_, gameManager_);
 	switchToNextTarget();
 }
 
 Tf2Aimbot::~Tf2Aimbot()
 {
-	closeTargettingThread();
+	delete trackingSystem_;
 	delete procManager_;
 	delete gameManager_;
 }
 
+void Tf2Aimbot::resumeTracking() { trackingSystem_->resume(); }
+
+void Tf2Aimbot::pauseTracking() { trackingSystem_->pause(); }
+
+void Tf2Aimbot::switchToNextTarget() { switchTarget(nextIndex); }
+
+void Tf2Aimbot::switchToPrevTarget() { switchTarget(prevIndex); };
+
 void Tf2Aimbot::start()
 {
-	openTargettingThread();
-	resumeThread();
-
-	char input = 0;
-
+	const DWORD sleepTime = 250;
+	cout << "Press caps to lock, and use the arrow keys to switch targets.\n";
 	while (1)
 	{
-		std::cin >> input;
-		switch (input)
+		if (GetAsyncKeyState(VK_CAPITAL))
 		{
-		case 'N':
-		case 'n':
-			switchToNextTarget();
-			break;
-		case 'B':
-		case 'b':
+			if (trackingSystem_->isPaused())
+				resumeTracking();
+			else
+				pauseTracking();
+
+			Sleep(sleepTime);
+		}
+		if (GetAsyncKeyState(VK_LEFT))
+		{
 			switchToPrevTarget();
-			break;
-		case 'P':
-		case 'p':
-			try
-			{
-				pauseThread();
-			}
-			catch (const char* err)
-			{
-				cout << err << endl;
-			}
-			break;
-		case 'R':
-		case 'r':
-			try
-			{
-				resumeThread();
-			}
-			catch (const char* err)
-			{
-				cout << err << endl;
-			}
-			break;
-		case 'Q':
-		case 'q':
-			return;
-			break;
-		default:
-			break;
+			Sleep(sleepTime);
+		}
+		if (GetAsyncKeyState(VK_RIGHT))
+		{
+			switchToNextTarget();
+			Sleep(sleepTime);
 		}
 	}
-	// todo: start the aimbot main loop for controlling lockons.
-	// todo: Find out how to identify my own player.
 }
 
-void Tf2Aimbot::switchToNextTarget()
-{
-	ClientInfo client;
-	if (!paused_) WaitForSingleObject(mutex_, INFINITE);
-
-	do
-	{
-		targetPlayerIndex_ =
-			(targetPlayerIndex_ + 1) >= MAX_PLAYERS ? 0 : targetPlayerIndex_ + 1;
-		client = gameManager_->getClientAtIndex(targetPlayerIndex_);
-	}
-	while (!client.entity || client.entity == gameManager_->dwLocalPlayerBase());
-	targetPlayerBase_ = client.entity;
-
-	if (!paused_) ReleaseMutex(mutex_);
-}
-
-void Tf2Aimbot::switchToPrevTarget()
+void Tf2Aimbot::switchTarget(void (*getNewTarget)(Tf2Aimbot*))
 {
 	ClientInfo_t client;
-	if (!paused_) WaitForSingleObject(mutex_, INFINITE);
 
 	do
 	{
-		targetPlayerIndex_ = targetPlayerIndex_ == 0
-			                     ? MAX_PLAYERS - 1
-			                     : targetPlayerIndex_ - 1;
-
+		getNewTarget(this);
 		client = gameManager_->getClientAtIndex(targetPlayerIndex_);
 	}
-	while (!client.entity || client.entity == gameManager_->dwLocalPlayerBase());
-	targetPlayerBase_ = client.entity;
-
-	if (!paused_) ReleaseMutex(mutex_);
+	while (!isGoodTarget(client));
+	trackingSystem_->setTargetBase(client.entity);
 }
 
-
-void Tf2Aimbot::pauseThread()
+bool Tf2Aimbot::isGoodTarget(ClientInfo_t client)
 {
-	if (paused_)
-		throw "(Tf2Aimbot/pauseThread) Thread already paused";
-	WaitForSingleObject(mutex_, INFINITE);
-	paused_ = true;
+	if (!client.entity || client.entity == gameManager_->dwLocalPlayerBase())
+		return false;
+
+	Entity_t ent = {0};
+	Entity_t localPlayer = {0};
+	procManager_->readAddress(client.entity, (BYTE*)&ent, sizeof(ent));
+	procManager_->readAddress(gameManager_->dwLocalPlayerBase(), (BYTE*)&localPlayer, sizeof(localPlayer));
+	return !ent.deadFlag && ent.teamNo >= 2 && ent.teamNo != localPlayer.teamNo;
 }
 
-void Tf2Aimbot::resumeThread()
+void Tf2Aimbot::nextIndex(Tf2Aimbot* obj)
 {
-	if (!paused_)
-		throw "(Tf2Aimbot/resumeThread) Not currently paused";
-
-	if (!ReleaseMutex(mutex_))
-		throw "(Tf2Aimbot/resumeThread) Releasing mutex twice";
-	paused_ = false;
+	DWORD newIndex = (obj->targetPlayerIndex() + 1) >= MAX_PLAYERS
+		                 ? 0
+		                 : obj->targetPlayerIndex() + 1;
+	obj->setTargetPlayerIndex(newIndex);
 }
 
-void Tf2Aimbot::closeTargettingThread()
+void Tf2Aimbot::prevIndex(Tf2Aimbot* obj)
 {
-	if (!paused_)
-		WaitForSingleObject(mutex_, INFINITE);
-	terminateThread_ = true;
-	ReleaseMutex(mutex_);
-	WaitForSingleObject(thread_, INFINITE);
-
-	CloseHandle(thread_); // todo: check if this thread is even open
-	CloseHandle(mutex_);
-}
-
-DWORD WINAPI trackPlayerThread(LPVOID vParams)
-{
-	auto params = (ThreadParam*)vParams;
-	params->obj_->initThread(); // todo: change this to execute tracking
-	delete params;
-	return 0;
-}
-
-
-void Tf2Aimbot::openTargettingThread()
-{
-	// todo: make the thread control the cursor. Pass params through the thread as well.
-	auto params = new ThreadParam(this, 0, 1);
-	thread_ = CreateThread(NULL, 0, trackPlayerThread, (LPVOID)params, 0, NULL);
-}
-
-void Tf2Aimbot::initThread()
-{
-	while (1)
-	{
-		if (WAIT_FAILED == WaitForSingleObject(mutex_, INFINITE))
-			throw "(tf2Aimbot/testThread) wait failed";
-
-		if (terminateThread_)
-		{
-			cout << "TERMINATING!!!!\n";
-			ReleaseMutex(mutex_);
-			return;
-		}
-
-		trackPlayer();
-
-		ReleaseMutex(mutex_);
-	}
-}
-
-
-void Tf2Aimbot::trackPlayer()
-{
-	PlayerInfo_t player;
-	PlayerInfo_t bot1;
-
-	float dx, dy, dr, dz;
-	float xySlope, rzSlope;
-	float pitch, yaw;
-
-	player = gameManager_->getLocalPlayerInfo();
-	bot1 = gameManager_->getPlayerInfo(targetPlayerBase_);
-
-	dx = bot1.x - player.x;
-	dy = bot1.y - player.y;
-	dz = bot1.z - player.z;
-	dr = sqrt(dy * dy + dx * dx);
-
-	xySlope = dy / dx;
-	rzSlope = dz / dr;
-
-	// todo: Figure out why we have to invert pitch...
-	pitch = (-1) * atan(rzSlope) * 180 / PI;
-	yaw = atan(xySlope) * 180 / PI;
-
-	// todo: the bound restrictions for tan...
-	yaw += 180 * (dx < 0);
-
-
-	injectAngle(pitch, yaw);
-
-	// todo: figure out where to put this verbose shit
-	// printPlayerInfo(player);
-	// printPlayerInfo(bot1);
-	// cout << "dr: " << dr << "\n";
-	// cout << "dx: " << dx << "\n";
-	// cout << "dy: " << dy << "\n";
-	// cout << "dz: " << dz << "\n";
-	//
-	// cout << "xySlope: " << xySlope << "\n\n";
-	// cout << "yzSlope: " << rzSlope << "\n\n";
-	// // Sleep(100);
-	// system("cls");
-}
-
-void Tf2Aimbot::injectAngle(float pitch, float yaw)
-{
-	const DWORD nBytes = 4;
-
-	BYTE pitchAndYaw[2 * nBytes] = {0};
-
-	DWORD dwPitch = *(DWORD*)&pitch;
-	DWORD dwYaw = *(DWORD*)&yaw;
-
-	for (DWORD i = 0; i < nBytes; ++i)
-	{
-		pitchAndYaw[i] = (dwPitch >> (i * 8)) & 0xFF;
-		pitchAndYaw[i + nBytes] = (dwYaw >> (i * 8)) & 0xFF;
-	}
-
-	procManager_->writeAddress(gameManager_->dwPitchBase(),
-	                           pitchAndYaw,
-	                           2 * nBytes);
+	DWORD newIndex = obj->targetPlayerIndex() == 0
+		                 ? MAX_PLAYERS - 1
+		                 : obj->targetPlayerIndex() - 1;
+	obj->setTargetPlayerIndex(newIndex);
 }
 
 void Tf2Aimbot::printPlayerInfo(PlayerInfo_t player)
 {
-	// cout << "Player hp: " << player.hp << "\n";
+	// cout << "Player hp: " << localPlayer.hp << "\n";
 	printf("Player hp: %d\n", player.hp);
 	cout << "Player x: " << player.x << "\n";
 	cout << "Player y: " << player.y << "\n";

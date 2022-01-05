@@ -10,6 +10,7 @@ Tf2GameManagerV2::Tf2GameManagerV2(ProcessManager* proc)
 
 	pitchBase_ = (float*)(engineBase_ + PITCH_OFFSET);
 	yawBase_ = (float*)(engineBase_ + YAW_OFFSET);
+	printVerbose();
 }
 
 PlayerInfo_t Tf2GameManagerV2::getPlayerInfo(DWORD playerBase)
@@ -19,10 +20,12 @@ PlayerInfo_t Tf2GameManagerV2::getPlayerInfo(DWORD playerBase)
 
 PlayerInfo_t Tf2GameManagerV2::getLocalPlayerInfo()
 {
-	return loadPlayerInfo(localPlayerBase_);
+	return loadLocalPlayerInfo(localPlayerBase_);
 }
 
-ClientInfo_t Tf2GameManagerV2::getClientAtIndex(DWORD index) {
+
+ClientInfo_t Tf2GameManagerV2::getClientAtIndex(DWORD index)
+{
 	ClientInfo_t client;
 	procManager_->readAddress(entityListBase_ + sizeof(ClientInfo_t) * index,
 	                          (BYTE*)&client, sizeof(client));
@@ -31,17 +34,40 @@ ClientInfo_t Tf2GameManagerV2::getClientAtIndex(DWORD index) {
 
 PlayerInfo_t Tf2GameManagerV2::loadPlayerInfo(DWORD entityBase)
 {
-	// todo: requires that entityBase is not a fucking null pointer.
-	// const DWORD clientInfoSize = 0x10;
-	// const DWORD hpOffset = 0xA8;
-	// const DWORD xOffset = 0x28c;
-	// const DWORD yOffset = 0x290;
-	// const DWORD zOffset = 0x294;
-	// const DWORD observermodeOffset = 0x109C;
-	// const DWORD cursoridOffset = 0x177C;
-	//
-	// DWORD x, y, z;
+	// todo: store the bone matrix and reuse it...
+	if (!entityBase)
+		throw "(Tf2GameManagerV2::loadPlayerInfo) Null pointer exception";
 
+	PlayerInfo_t playerInfo = {0};
+	Entity_t player;
+	BoneMatrix_t bonem;
+
+	procManager_->readAddress(entityBase, (BYTE*)&player, sizeof(player));
+
+	playerInfo.hp = player.hp;
+	playerInfo.x = player.x;
+	playerInfo.y = player.y;
+	playerInfo.z = player.z;
+	// playerInfo.observermode = player.observermode;
+	// playerInfo.cursorid = player.cursorid;
+	playerInfo.pitch = player.pitch1;
+	playerInfo.yaw = player.yaw1;
+
+	// todo: testing bone matrix
+
+
+	procManager_->readAddress(player.boneMatrixBase, (BYTE*)&bonem, sizeof(bonem));
+
+	playerInfo.x = bonem.headx;
+	playerInfo.y = bonem.heady;
+	playerInfo.z = bonem.headz;
+
+	return playerInfo;
+}
+
+// todo: remove this duplicate code... ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PlayerInfo_t Tf2GameManagerV2::loadLocalPlayerInfo(DWORD entityBase)
+{
 	if (!entityBase)
 		throw "(Tf2GameManagerV2::loadPlayerInfo) Null pointer exception";
 
@@ -50,17 +76,19 @@ PlayerInfo_t Tf2GameManagerV2::loadPlayerInfo(DWORD entityBase)
 
 	procManager_->readAddress(entityBase, (BYTE*)&player, sizeof(player));
 
-	// todo: verbose shit ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	playerInfo.hp = player.hp;
-	playerInfo.x = player.x;
-	playerInfo.y = player.y;
-	playerInfo.z = player.z;
-	playerInfo.observermode = player.observermode;
-	playerInfo.cursorid = player.cursorid;
-	// todo: verbose shit ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	playerInfo.x = player.x5;
+	playerInfo.y = player.y5;
+	playerInfo.z = player.z5 + 45.0f;
+
+	playerInfo.pitch = player.pitch1;
+	playerInfo.yaw = player.yaw1;
+
+
 	return playerInfo;
 }
 
+// todo: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void Tf2GameManagerV2::loadProcessAndModules()
 {

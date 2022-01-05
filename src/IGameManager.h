@@ -12,6 +12,8 @@ typedef struct PlayerInfo
 	float z; // 0x294
 	DWORD observermode; // 0x109C
 	DWORD cursorid; // 0x177C
+	float pitch;
+	float yaw;
 } PlayerInfo_t;
 
 typedef struct ClientInfo
@@ -21,6 +23,17 @@ typedef struct ClientInfo
 	DWORD prev;
 	DWORD next;
 } ClientInfo_t;
+
+using BoneMatrix_t = struct BoneMatrix
+{
+public:
+	BYTE pad0[12];
+	float headx;
+	BYTE pad1[12];
+	float heady;
+	BYTE pad2[12];
+	float headz;
+}; // Size: 0x05B4
 
 class IGameManager
 {
