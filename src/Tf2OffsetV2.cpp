@@ -1,6 +1,6 @@
-#include "Tf2GameManagerV2.h"
+#include "Tf2OffsetV2.h"
 
-Tf2GameManagerV2::Tf2GameManagerV2(ProcessManager* proc)
+Tf2OffsetV2::Tf2OffsetV2(Process* proc)
 {
 	procManager_ = proc;
 	loadProcessAndModules();
@@ -13,63 +13,63 @@ Tf2GameManagerV2::Tf2GameManagerV2(ProcessManager* proc)
 	printVerbose();
 }
 
-PlayerInfo_t Tf2GameManagerV2::getPlayerInfo(DWORD playerBase)
-{
-	return loadPlayerInfo(playerBase);
-}
+// PlayerInfo_t Tf2OffsetV2::getPlayerInfo(DWORD playerBase)
+// {
+// 	return loadPlayerInfo(playerBase);
+// }
 
-PlayerInfo_t Tf2GameManagerV2::getLocalPlayerInfo()
+PlayerInfo_t Tf2OffsetV2::getLocalPlayerInfo()
 {
 	return loadLocalPlayerInfo(localPlayerBase_);
 }
 
 
-ClientInfo_t Tf2GameManagerV2::getClientAtIndex(DWORD index)
-{
-	ClientInfo_t client;
-	procManager_->readAddress(entityListBase_ + sizeof(ClientInfo_t) * index,
-	                          (BYTE*)&client, sizeof(client));
-	return client;
-}
+// ClientInfo_t Tf2OffsetV2::getClientAtIndex(DWORD index)
+// {
+// 	ClientInfo_t client;
+// 	procManager_->readAddress(entityListBase_ + sizeof(ClientInfo_t) * index,
+// 	                          (BYTE*)&client, sizeof(client));
+// 	return client;
+// }
 
-PlayerInfo_t Tf2GameManagerV2::loadPlayerInfo(DWORD entityBase)
-{
-	// todo: store the bone matrix and reuse it...
-	if (!entityBase)
-		throw "(Tf2GameManagerV2::loadPlayerInfo) Null pointer exception";
-
-	PlayerInfo_t playerInfo = {0};
-	Entity_t player;
-	BoneMatrix_t bonem;
-
-	procManager_->readAddress(entityBase, (BYTE*)&player, sizeof(player));
-
-	playerInfo.hp = player.hp;
-	playerInfo.x = player.x;
-	playerInfo.y = player.y;
-	playerInfo.z = player.z;
-	// playerInfo.observermode = player.observermode;
-	// playerInfo.cursorid = player.cursorid;
-	playerInfo.pitch = player.pitch1;
-	playerInfo.yaw = player.yaw1;
-
-	// todo: testing bone matrix
-
-
-	procManager_->readAddress(player.boneMatrixBase, (BYTE*)&bonem, sizeof(bonem));
-
-	playerInfo.x = bonem.headx;
-	playerInfo.y = bonem.heady;
-	playerInfo.z = bonem.headz;
-
-	return playerInfo;
-}
+// PlayerInfo_t Tf2OffsetV2::loadPlayerInfo(DWORD entityBase)
+// {
+// 	// todo: store the bone matrix and reuse it...
+// 	if (!entityBase)
+// 		throw "(Tf2OffsetV2::loadPlayerInfo) Null pointer exception";
+//
+// 	PlayerInfo_t playerInfo = {0};
+// 	Entity_t player;
+// 	BoneMatrix_t bonem;
+//
+// 	procManager_->readAddress(entityBase, (BYTE*)&player, sizeof(player));
+//
+// 	playerInfo.hp = player.hp;
+// 	playerInfo.x = player.x;
+// 	playerInfo.y = player.y;
+// 	playerInfo.z = player.z;
+// 	// playerInfo.observermode = player.observermode;
+// 	// playerInfo.cursorid = player.cursorid;
+// 	playerInfo.pitch = player.pitch1;
+// 	playerInfo.yaw = player.yaw1;
+//
+// 	// todo: testing bone matrix
+//
+//
+// 	procManager_->readAddress(player.boneMatrixBase, (BYTE*)&bonem, sizeof(bonem));
+//
+// 	playerInfo.x = bonem.headx;
+// 	playerInfo.y = bonem.heady;
+// 	playerInfo.z = bonem.headz;
+//
+// 	return playerInfo;
+// }
 
 // todo: remove this duplicate code... ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PlayerInfo_t Tf2GameManagerV2::loadLocalPlayerInfo(DWORD entityBase)
+PlayerInfo_t Tf2OffsetV2::loadLocalPlayerInfo(DWORD entityBase)
 {
 	if (!entityBase)
-		throw "(Tf2GameManagerV2::loadPlayerInfo) Null pointer exception";
+		throw "(Tf2OffsetV2::loadPlayerInfo) Null pointer exception";
 
 	PlayerInfo_t playerInfo = {0};
 	Entity_t player;
@@ -90,7 +90,7 @@ PlayerInfo_t Tf2GameManagerV2::loadLocalPlayerInfo(DWORD entityBase)
 
 // todo: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void Tf2GameManagerV2::loadProcessAndModules()
+void Tf2OffsetV2::loadProcessAndModules()
 {
 	procManager_->process(L"hl2.exe");
 
@@ -115,7 +115,7 @@ void Tf2GameManagerV2::loadProcessAndModules()
 	}
 }
 
-void Tf2GameManagerV2::getLocalPlayerBase()
+void Tf2OffsetV2::getLocalPlayerBase()
 {
 	const BYTE sig[] = {0xA1, 0x00, 0x00, 0x00, 0x00, 0x33, 0xC9, 0x83, 0xC4, 0x04};
 	const char mask[] = "x????xxxxx";
@@ -125,11 +125,11 @@ void Tf2GameManagerV2::getLocalPlayerBase()
 	DWORD localPlayerDoublePtr = procManager_->read<DWORD>(sigBase + 1);
 	localPlayerBase_ = procManager_->read<DWORD>(localPlayerDoublePtr);
 	if (!localPlayerBase_)
-		throw "(Tf2GameManagerV2::getLocalPlayerBase) Local player base was a null pointer";
+		throw "(Tf2OffsetV2::getLocalPlayerBase) Local player base was a null pointer";
 }
 
 
-void Tf2GameManagerV2::getEntityListBasePtr()
+void Tf2OffsetV2::getEntityListBasePtr()
 {
 	BYTE sig[] = {
 		0xA1, 0x00, 0x00, 0x00, 0x00, 0xA8,
@@ -148,13 +148,13 @@ void Tf2GameManagerV2::getEntityListBasePtr()
 	entityListBase_ += 0x18;
 }
 
-void Tf2GameManagerV2::testPrintHealths()
+void Tf2OffsetV2::testPrintHealths()
 {
-	ClientInfo_t entityList[MAX_PLAYERS];
+	ClientInfo_t entityList[24];
 	Entity_t ent;
 	procManager_->readAddress(entityListBase_, (BYTE*)&entityList, sizeof(entityList));
 
-	for (int i = 0; i < MAX_PLAYERS; ++i)
+	for (int i = 0; i < 24; ++i)
 	{
 		if (entityList[i].entity)
 		{
@@ -168,7 +168,7 @@ void Tf2GameManagerV2::testPrintHealths()
 }
 
 
-void Tf2GameManagerV2::printVerbose()
+void Tf2OffsetV2::printVerbose()
 {
 	// printf("%x\n\n", *entityListBase_);
 

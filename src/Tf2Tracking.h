@@ -2,8 +2,8 @@
 
 #include <math.h>
 
-#include "ProcessManager.h"
-#include "IGameManager.h"
+#include "Process.h"
+#include "IOffset.h"
 
 #define PI 3.14159265
 
@@ -28,25 +28,29 @@ typedef struct LocalShit
 } LocalShit_t;
 
 
-class TrackingSystem
+class Tf2Tracking
 {
 public:
-	TrackingSystem(ProcessManager* procManager, IGameManager* gameManager);
-	~TrackingSystem();
+	Tf2Tracking(Process* procManager, IOffset* gameManager);
+	~Tf2Tracking();
 
 	void pause();
 	void resume();
 	bool isPaused() const { return paused_; };
 
 	void setTargetBase(DWORD newTargetBase);
-	void trackingMainLoop();
+
+	void toggleRageMode();
 
 	Coordinate_t getTargetCoordinate();
 	LocalShit_t getLocalCoordinate();
 
+protected:
+	void mainLoop();
+
 private:
-	ProcessManager* procManager_ = 0;
-	IGameManager* gameManager_ = 0;
+	Process* proc_ = 0;
+	IOffset* gameManager_ = 0;
 	DWORD localPlayerBase_ = 0;
 	DWORD targetPlayerBase_ = 0;
 	DWORD targetBoneBase_ = 0;
@@ -63,16 +67,17 @@ private:
 	float dPitch_ = 0.0f;
 	float newPitch_ = 0.0f;
 	float newYaw_ = 0.0f;
+	bool rageMode_ = false;
 
 	HANDLE thread_ = 0;
 	HANDLE mutex_ = 0;
 	bool paused_ = true;
 	bool terminateThread_ = false;
 
-	static DWORD WINAPI threadInitiator(LPVOID vParams);
+	static DWORD WINAPI threadInit(LPVOID vParams);
 
-	void openTrackingThread();
-	void closeTrackingThread();
+	void openThread();
+	void closeThread();
 
 	void adjustAim();
 	void injectAngle(float pitch, float yaw);

@@ -10,12 +10,12 @@
 
 #pragma warning(disable : 4996)
 
-class ProcessManager
+class Process
 {
 	// todo: refactor the process manager
 public:
-	ProcessManager();
-	~ProcessManager();
+	Process();
+	~Process();
 
 	//READ MEMORY
 	template <class cData>

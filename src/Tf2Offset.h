@@ -4,8 +4,8 @@
 #include <fstream>
 #include <ctime>
 
-#include "IGameManager.h"
-#include "ProcessManager.h"
+#include "IOffset.h"
+#include "Process.h"
 
 #pragma warning(disable : 4996)
 
@@ -18,11 +18,11 @@ using std::endl;
 #define YAW_OFFSET PITCH_OFFSET + 4
 
 
-class Tf2GameManager : public IGameManager
+class Tf2Offset : public IOffset
 {
 public:
-	Tf2GameManager(ProcessManager* proc);
-	~Tf2GameManager();
+	Tf2Offset(Process* proc);
+	~Tf2Offset();
 
 	// Getters /////////////////////////////////////////////
 	DWORD dwClient() const { return dwClient_; }
@@ -54,9 +54,9 @@ public:
 	///////////////////////////////////////////////////////////
 
 	void printVerbose() override;
-	PlayerInfo_t getPlayerInfo(DWORD index) override;
+	PlayerInfo_t getPlayerInfo(DWORD index) /*override*/;
 	PlayerInfo_t getLocalPlayerInfo() override { throw "stub"; };
-	ClientInfo_t getClientAtIndex(DWORD index) override { throw "stub"; };
+	ClientInfo_t getClientAtIndex(DWORD index) /*override*/ { throw "stub"; };
 
 	void save(const char*);
 
@@ -64,7 +64,7 @@ public:
 	DWORD testGetAmmo();
 
 private:
-	ProcessManager* procManager_;
+	Process* procManager_;
 
 	// DLL Modules
 	DWORD dwClient_;
@@ -109,7 +109,7 @@ private:
 	DWORD dwPitch_; // address of viewangle pitch
 	DWORD dwYaw_; // address of viewangle yaw
 
-	void init(ProcessManager* proc);
+	void init(Process* proc);
 	void loadProcess();
 	void loadOffsets();
 	void printOffset(const char* gname, DWORD offset);

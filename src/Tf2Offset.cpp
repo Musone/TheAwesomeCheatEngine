@@ -1,6 +1,6 @@
-#include "Tf2GameManager.h"
+#include "Tf2Offset.h"
 
-void Tf2GameManager::init(ProcessManager* proc)
+void Tf2Offset::init(Process* proc)
 {
 	procManager_ = proc;
 	dwClient_ = 0;
@@ -31,7 +31,7 @@ void Tf2GameManager::init(ProcessManager* proc)
 	dwYaw_ = 0;
 }
 
-Tf2GameManager::Tf2GameManager(ProcessManager* proc)
+Tf2Offset::Tf2Offset(Process* proc)
 {
 	// todo: init the process manager in Aimbot class instead of here.
 	init(proc);
@@ -43,18 +43,18 @@ Tf2GameManager::Tf2GameManager(ProcessManager* proc)
 	// loadOffsets();
 }
 
-Tf2GameManager::~Tf2GameManager()
+Tf2Offset::~Tf2Offset()
 {
 	// todo: don't delete here because technically Tf2Aimbot owns the process.
 }
 
-void Tf2GameManager::getViewAngles()
+void Tf2Offset::getViewAngles()
 {
 	dwPitch_ = dwEngine_ + PITCH_OFFSET;
 	dwYaw_ = dwEngine_ + YAW_OFFSET;
 }
 
-PlayerInfo_t Tf2GameManager::getPlayerInfo(DWORD index)
+PlayerInfo_t Tf2Offset::getPlayerInfo(DWORD index)
 {
 	const DWORD clientInfoSize = 0x10;
 	const DWORD hpOffset = 0xA8;
@@ -99,7 +99,7 @@ PlayerInfo_t Tf2GameManager::getPlayerInfo(DWORD index)
 }
 
 
-void Tf2GameManager::getEntityListBasePtr()
+void Tf2Offset::getEntityListBasePtr()
 {
 	BYTE sig[] = {
 		0xA1, 0x00, 0x00, 0x00, 0x00, 0xA8,
@@ -123,7 +123,7 @@ void Tf2GameManager::getEntityListBasePtr()
 	// dwEntityList_ -= dwClient_;
 }
 
-void Tf2GameManager::loadProcess()
+void Tf2Offset::loadProcess()
 {
 	procManager_->process(L"hl2.exe");
 
@@ -152,7 +152,7 @@ void Tf2GameManager::loadProcess()
 ////// less important //////////////////////////////////////////////////////////////////////////////////////////////
 // todo: Fix the crap below ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // todo: testing my own signature scanner for the function that controls ammo reload.
-DWORD Tf2GameManager::testGetAmmo()
+DWORD Tf2Offset::testGetAmmo()
 {
 	BYTE sig[] = {
 		0x55, 0x8B, 0xEC, 0x56, 0x57, 0x8B, 0x7D, 0x08, 0x8B, 0xF1, 0x85, 0xFF, 0x7E, 0x4F, 0x53, 0x8B,
@@ -195,7 +195,7 @@ DWORD Tf2GameManager::testGetAmmo()
 }
 
 
-void Tf2GameManager::save(const char* destFile)
+void Tf2Offset::save(const char* destFile)
 {
 	std::ofstream saveF;
 	saveF.open(destFile); // Defines the file
@@ -264,7 +264,7 @@ void Tf2GameManager::save(const char* destFile)
 }
 
 
-void Tf2GameManager::printVerbose()
+void Tf2Offset::printVerbose()
 {
 	printOffset("dwLocalPlayer", dwLocalPlayer_); // Printing the offset for formatting
 	printOffset("dwEntityList", dwEntityList_); // Printing the offset for formatting
@@ -300,7 +300,7 @@ void Tf2GameManager::printVerbose()
 	cout << endl;
 }
 
-void Tf2GameManager::loadOffsets()
+void Tf2Offset::loadOffsets()
 {
 	dwButtonBase_ = procManager_->findAddress(dwClient_, dwClientSize_,
 	                                          (PBYTE)"\x68\x00\x00\x00\x00\x8B\x40\x28\xFF\xD0\xA1",
@@ -376,7 +376,7 @@ void Tf2GameManager::loadOffsets()
 	                                                  "xx????xxx", 2));
 }
 
-void Tf2GameManager::printOffset(const char* gname, DWORD offset)
+void Tf2Offset::printOffset(const char* gname, DWORD offset)
 {
 	cout << gname << " : ";
 	cout << "0x";

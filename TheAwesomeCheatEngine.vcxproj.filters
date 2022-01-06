@@ -15,45 +15,51 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Tf2GameManager.cpp">
+    <ClCompile Include="src\Tf2Offset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ProcessManager.cpp">
+    <ClCompile Include="src\Process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Tf2Aimbot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tf2GameManagerV2.cpp">
+    <ClCompile Include="src\Tf2OffsetV2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Testing.cpp">
+    <ClCompile Include="src\Tf2Tracking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\TrackingSystem.cpp">
+    <ClCompile Include="src\Tf2Targetting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Tf2GameManager.h">
+    <ClInclude Include="src\Tf2Offset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ProcessManager.h">
+    <ClInclude Include="src\Process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Tf2Aimbot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\IGameManager.h">
+    <ClInclude Include="src\IOffset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Tf2GameManagerV2.h">
+    <ClInclude Include="src\Tf2OffsetV2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\TrackingSystem.h">
+    <ClInclude Include="src\Tf2Tracking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Tf2Targetting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

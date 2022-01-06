@@ -1,19 +1,19 @@
-#include "ProcessManager.h"
+#include "Process.h"
 
 using namespace std;
 
-ProcessManager::ProcessManager()
+Process::Process()
 {
 }
 
-ProcessManager::~ProcessManager()
+Process::~Process()
 {
 	CloseHandle(hProcess);
 }
 
 
 /* This Function Will Return A Handle To The process So We Can Write & read Memeory From The process. */
-void ProcessManager::process(LPCWSTR ProcessName)
+void Process::process(LPCWSTR ProcessName)
 {
 	while (1)
 	{
@@ -42,7 +42,7 @@ void ProcessManager::process(LPCWSTR ProcessName)
 	}
 }
 
-bool ProcessManager::sigEqual(BYTE* data, BYTE* sig, char* mask)
+bool Process::sigEqual(BYTE* data, BYTE* sig, char* mask)
 {
 	// todo: there is no check here for if the the data pointer exceeds the region's bounds... I think it still works
 	// todo: because the region is alligned to the # of bytes in our signature... (aligned to 12 bytes?... or just luck...)
@@ -58,7 +58,7 @@ bool ProcessManager::sigEqual(BYTE* data, BYTE* sig, char* mask)
 	return true;
 }
 
-DWORD ProcessManager::findSignature(DWORD base, DWORD size, BYTE* sig, char* mask)
+DWORD Process::findSignature(DWORD base, DWORD size, BYTE* sig, char* mask)
 {
 	MEMORY_BASIC_INFORMATION mbi = {0}; // I think this is init'ing with 0's
 	DWORD offset = 0;
@@ -96,7 +96,7 @@ DWORD ProcessManager::findSignature(DWORD base, DWORD size, BYTE* sig, char* mas
 
 /* Returns The Base Address Of The Specified module Inside The Target process
 /* e.g.[ module("client.dll"); ]. */
-MODULEENTRY32 ProcessManager::module(LPCWSTR ModuleName)
+MODULEENTRY32 Process::module(LPCWSTR ModuleName)
 {
 	//Variables
 	HANDLE hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
@@ -117,7 +117,7 @@ MODULEENTRY32 ProcessManager::module(LPCWSTR ModuleName)
 }
 
 // TODO: for reading with extra offset? I am suspicious to the integrity of the offsets this method is returning...
-DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, int extra)
+DWORD Process::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const char* mask, int extra)
 {
 	//todo: what is extra???? Why do we need extra??? What the fuck is this???
 
@@ -134,16 +134,16 @@ DWORD ProcessManager::findAddress(DWORD mod, DWORD modsize, BYTE* sig, const cha
 }
 
 
-void ProcessManager::writeAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
+void Process::writeAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
 {
 	// cout << "#bytes " << nBytes << endl;
 	if (!WriteProcessMemory(hProcess, (LPVOID)addr, buff, nBytes, NULL))
-		throw "(ProcessManager/writeAddress) Could not write to memory process";
+		throw "(Process/writeAddress) Could not write to memory process";
 }
 
 
 template <class cData>
-cData ProcessManager::read(DWORD dwAddress)
+cData Process::read(DWORD dwAddress)
 {
 	// TODO: This uses the template class to dynamically decide the data type to
 	// read.
@@ -153,15 +153,15 @@ cData ProcessManager::read(DWORD dwAddress)
 	return cRead; // Returns Value At Specified dwAddress
 }
 
-void ProcessManager::readAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
+void Process::readAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
 {
 	if (!ReadProcessMemory(hProcess, (LPVOID)addr, buff, nBytes, NULL))
-		throw "(ProcessManager/writeAddress) Could not write to memory process";
+		throw "(Process/writeAddress) Could not write to memory process";
 }
 
 
 template <class cData>
-cData ProcessManager::readString(DWORD dwAddress)
+cData Process::readString(DWORD dwAddress)
 {
 	cData csRead; // Generic Variable To Store Data
 	ReadProcessMemory(hProcess, (LPVOID)dwAddress, &csRead, 32 * sizeof(cData),

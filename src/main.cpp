@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <ctype.h>
+// #include <windows.h>
+
+// #define _UNICODE 
+// #define UNICODE
 
 #include "Tf2Aimbot.h"
 

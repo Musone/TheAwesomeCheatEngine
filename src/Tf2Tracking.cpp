@@ -1,4 +1,4 @@
-﻿#include "TrackingSystem.h"
+﻿#include "Tf2Tracking.h"
 
 // todo: Find eye position, and use that for local player position in tracking system. (find view-matrix)
 // todo: Check if player is on my team before choosing a target
@@ -6,49 +6,49 @@
 // todo:
 // todo: 
 
-TrackingSystem::TrackingSystem(ProcessManager* procManager, IGameManager* gameManager)
+Tf2Tracking::Tf2Tracking(Process* procManager, IOffset* gameManager)
 {
-	procManager_ = procManager;
+	proc_ = procManager;
 	gameManager_ = gameManager;
 	mutex_ = CreateMutexA(NULL, TRUE, NULL);
-	openTrackingThread();
+	openThread();
 }
 
-TrackingSystem::~TrackingSystem()
+Tf2Tracking::~Tf2Tracking()
 {
-	closeTrackingThread();
+	closeThread();
 	CloseHandle(thread_);
 	CloseHandle(mutex_);
 }
 
 
-void TrackingSystem::setTargetBase(DWORD newTargetBase)
+void Tf2Tracking::setTargetBase(DWORD newTargetBase)
 {
 	DWORD boneBaseOffset = 0x5B0;
 	if (paused_)
 	{
 		targetPlayerBase_ = newTargetBase;
-		targetBoneBase_ = procManager_->read<DWORD>(targetPlayerBase_ + boneBaseOffset);
+		targetBoneBase_ = proc_->read<DWORD>(targetPlayerBase_ + boneBaseOffset);
 		// todo: This shouldn't be static...
 	}
 	else
 	{
 		pause();
 		targetPlayerBase_ = newTargetBase;
-		targetBoneBase_ = procManager_->read<DWORD>(targetPlayerBase_ + boneBaseOffset);
+		targetBoneBase_ = proc_->read<DWORD>(targetPlayerBase_ + boneBaseOffset);
 		// todo: This shouldn't be static...
 		resume();
 	}
 }
 
-void TrackingSystem::pause()
+void Tf2Tracking::pause()
 {
 	if (paused_) return;
 	WaitForSingleObject(mutex_, INFINITE);
 	paused_ = true;
 }
 
-void TrackingSystem::resume()
+void Tf2Tracking::resume()
 {
 	if (!paused_) return;
 	if (!ReleaseMutex(mutex_))
@@ -56,7 +56,7 @@ void TrackingSystem::resume()
 	paused_ = false;
 }
 
-void TrackingSystem::trackingMainLoop()
+void Tf2Tracking::mainLoop()
 {
 	while (1)
 	{
@@ -74,19 +74,19 @@ void TrackingSystem::trackingMainLoop()
 	}
 }
 
-DWORD WINAPI TrackingSystem::threadInitiator(LPVOID vthis)
+DWORD WINAPI Tf2Tracking::threadInit(LPVOID vthis)
 {
-	TrackingSystem* obj = (TrackingSystem*)vthis;
-	obj->trackingMainLoop();
+	Tf2Tracking* obj = (Tf2Tracking*)vthis;
+	obj->mainLoop();
 	return 0;
 }
 
-void TrackingSystem::openTrackingThread()
+void Tf2Tracking::openThread()
 {
-	thread_ = CreateThread(NULL, 0, threadInitiator, (LPVOID)this, 0, NULL);
+	thread_ = CreateThread(NULL, 0, threadInit, (LPVOID)this, 0, NULL);
 }
 
-void TrackingSystem::closeTrackingThread()
+void Tf2Tracking::closeThread()
 {
 	pause();
 	terminateThread_ = true;
@@ -94,29 +94,42 @@ void TrackingSystem::closeTrackingThread()
 	WaitForSingleObject(thread_, INFINITE);
 }
 
-LocalShit_t TrackingSystem::getLocalCoordinate()
+LocalShit_t Tf2Tracking::getLocalCoordinate()
 {
 	// todo: This shouldn't be static
 	LocalShit_t result;
-	procManager_->readAddress(gameManager_->dwLocalPlayerBase() + 0x2f8, (BYTE*)&result, sizeof(result));
+	proc_->readAddress(gameManager_->dwLocalPlayerBase() + 0x2f8, (BYTE*)&result, sizeof(result));
 	return result;
 }
 
-Coordinate_t TrackingSystem::getTargetCoordinate()
+Coordinate_t Tf2Tracking::getTargetCoordinate()
 {
 	// todo: maybe this shouldnt be handled here? hmm...
 	Coordinate_t result;
 	BoneMatrix_t bonem;
 
-	procManager_->readAddress(targetBoneBase_, (BYTE*)&bonem, sizeof(bonem));
+	proc_->readAddress(targetBoneBase_, (BYTE*)&bonem, sizeof(bonem));
 	result.x = bonem.headx;
 	result.y = bonem.heady;
 	result.z = bonem.headz;
 	return result;
 }
 
+void Tf2Tracking::toggleRageMode()
+{
+	if (paused_)
+	{
+		rageMode_ = !rageMode_;
+	}
+	else
+	{
+		pause();
+		rageMode_ = !rageMode_;
+		resume();
+	}
+}
 
-void TrackingSystem::adjustAim()
+void Tf2Tracking::adjustAim()
 {
 	// todo: FIX JITTERING
 	float xySlope, rzSlope;
@@ -170,11 +183,18 @@ void TrackingSystem::adjustAim()
 	newPitch_ = local.pitch + dPitch_ / 2.0f;
 	newYaw_ = local.yaw + dYaw_ / 2.0f;
 	// todo: Applies smoothing. UNDER REDEVELOPEMENT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	injectAngle(newPitch_, newYaw_);
-	Sleep(10);
+	if (rageMode_)
+	{
+		injectAngle(goalPitch_, goalYaw_);
+	}
+	else
+	{
+		injectAngle(newPitch_, newYaw_);
+		Sleep(10);
+	}
 }
 
-void TrackingSystem::injectAngle(float pitch, float yaw)
+void Tf2Tracking::injectAngle(float pitch, float yaw)
 {
 	const DWORD nBytes = 4;
 
@@ -189,11 +209,11 @@ void TrackingSystem::injectAngle(float pitch, float yaw)
 		pitchAndYaw[i + nBytes] = (dwYaw >> (i * 8)) & 0xFF;
 	}
 
-	procManager_->writeAddress(gameManager_->dwPitchBase(), pitchAndYaw,
+	proc_->writeAddress(gameManager_->dwPitchBase(), pitchAndYaw,
 	                           2 * nBytes);
 }
 
-void TrackingSystem::printVerbose()
+void Tf2Tracking::printVerbose()
 {
 	// todo: figure out where to put this verbose shit
 	if (goalPitch_ > 89.0f || goalPitch_ < -89.0f) printf("Pitch out of bounds\n");

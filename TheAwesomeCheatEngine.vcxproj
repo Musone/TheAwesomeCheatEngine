@@ -20,20 +20,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tf2Aimbot.cpp" />
-    <ClCompile Include="src\Tf2GameManager.cpp" />
+    <ClCompile Include="src\Tf2Offset.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\ProcessManager.cpp" />
-    <ClCompile Include="src\Tf2GameManagerV2.cpp" />
-    <ClCompile Include="src\TrackingSystem.cpp" />
-    <ClCompile Include="Testing.cpp" />
+    <ClCompile Include="src\Process.cpp" />
+    <ClCompile Include="src\Tf2OffsetV2.cpp" />
+    <ClCompile Include="src\Tf2Tracking.cpp" />
+    <ClCompile Include="src\Tf2Targetting.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\IGameManager.h" />
+    <ClInclude Include="src\Structs.h" />
+    <ClInclude Include="src\IOffset.h" />
     <ClInclude Include="src\Tf2Aimbot.h" />
-    <ClInclude Include="src\Tf2GameManager.h" />
-    <ClInclude Include="src\ProcessManager.h" />
-    <ClInclude Include="src\Tf2GameManagerV2.h" />
-    <ClInclude Include="src\TrackingSystem.h" />
+    <ClInclude Include="src\Tf2Offset.h" />
+    <ClInclude Include="src\Process.h" />
+    <ClInclude Include="src\Tf2OffsetV2.h" />
+    <ClInclude Include="src\Tf2Tracking.h" />
+    <ClInclude Include="src\Tf2Targetting.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
