@@ -155,6 +155,8 @@ cData Process::read(DWORD dwAddress)
 
 void Process::readAddress(DWORD addr, BYTE* buff, SIZE_T nBytes)
 {
+	if (addr == 0)
+		throw "null ptr";
 	if (!ReadProcessMemory(hProcess, (LPVOID)addr, buff, nBytes, NULL))
 		throw "(Process/writeAddress) Could not write to memory process";
 }

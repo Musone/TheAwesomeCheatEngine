@@ -1,6 +1,40 @@
 #pragma once
 #include <windows.h>
 
+
+#define MAX_PLAYERS 24
+#define PI 3.14159265
+#define VIEW_MATRIX_OFFSET 0x59B7C8
+#define LOCAL_CAMERA_OFFSET 0x3AB858 // todo:
+#define Z_COMPENSATION 40 // todo:
+
+struct Vec2_t
+{
+	// offset
+	double x;
+	double y;
+};
+
+struct Vec4_t {
+  float x;
+  float y;
+  float z;
+  float w;
+};
+
+struct Vec3_t
+{
+	float x;
+	float y;
+	float z;
+};
+
+typedef struct Angle {
+  float pitch;
+  float yaw;
+  float roll;
+} Angle_t;
+
 typedef struct PlayerInfo
 {
 	// offset
@@ -26,11 +60,11 @@ using BoneMatrix_t = struct BoneMatrix
 {
 public:
 	BYTE pad0[12];
-	float headx;
+	float x;
 	BYTE pad1[12];
-	float heady;
+	float y;
 	BYTE pad2[12];
-	float headz;
+	float z;
 }; // Size: 0x05B4
 
 using Entity_t = struct Entity // todo: weird how A7 padding fucks things up...
@@ -72,6 +106,28 @@ public:
 	DWORD boneMatrix; // 0x05B0
 }; // Size: 0x05B4
 
+typedef struct LocalCoords
+{
+	float x;
+	float y;
+	float z;
+	float pitch;
+	float yaw;
+	float roll;
+} LocalCoords_t;
+
+
+
+// typedef struct LocalShit
+// {
+// 	float pitch;
+// 	float yaw;
+// 	float roll;
+// 	BYTE pad[96];
+// 	float x;
+// 	float y;
+// 	float z;
+// } LocalShit_t;
 
 // using Entity_t = struct Entity {  // todo: weird how A7 padding fucks things up...
 //  public:

@@ -49,8 +49,8 @@ public:
 	DWORD dwGlowObjectManager() const { return dwGlowObjectManager_; }
 	DWORD dwWorldToScreen() const { return dwWorldToScreen_; }
 	DWORD dwViewAngles() const { return dwViewAngles_; }
-	DWORD dwPitchBase() const override { return dwPitch_; }
-	DWORD dwYawBase() const override { return dwYaw_; }
+	DWORD pitchBase() const override { return dwPitch_; }
+	DWORD yawBase() const override { return dwYaw_; }
 	///////////////////////////////////////////////////////////
 
 	void printVerbose() override;

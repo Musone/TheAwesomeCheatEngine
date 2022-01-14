@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Structs.h"
+#include "../Resources/StructsAndResources.h"
 
 class IOffset
 {
@@ -15,7 +15,8 @@ public:
 	// virtual ClientInfo_t getClientAtIndex(DWORD index) = 0;
 
 	virtual DWORD entityListBase() const = 0;
-	virtual DWORD dwPitchBase() const = 0;
-	virtual DWORD dwYawBase() const = 0;
-	virtual DWORD dwLocalPlayerBase() const = 0;
+	virtual DWORD pitchBase() const = 0;
+	virtual DWORD yawBase() const = 0;
+	virtual DWORD localPlayerBase() const = 0;
+	virtual DWORD engineBase() const = 0;
 };

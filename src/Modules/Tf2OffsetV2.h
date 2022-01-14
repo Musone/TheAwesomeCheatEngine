@@ -1,11 +1,11 @@
 #pragma once
 #include "IOffset.h"
 #include "Process.h"
-#include "Structs.h"
+#include "../Resources/StructsAndResources.h"
 
 #define PITCH_OFFSET 0x467474
 #define YAW_OFFSET PITCH_OFFSET + 4
-// #define MAX_PLAYERS 24
+
 
 class Tf2OffsetV2 : public IOffset
 {
@@ -22,9 +22,10 @@ public:
 
 	DWORD entityListBase() const override { return entityListBase_; };
 
-	DWORD dwPitchBase() const override { return (DWORD)pitchBase_; };
-	DWORD dwYawBase() const override { return (DWORD)yawBase_; };
-	DWORD dwLocalPlayerBase() const override { return localPlayerBase_; };
+	DWORD pitchBase() const override { return (DWORD)pitchBase_; };
+	DWORD yawBase() const override { return (DWORD)yawBase_; };
+	DWORD localPlayerBase() const override { return localPlayerBase_; };
+	DWORD engineBase() const override { return engineBase_; };
 
 	// ClientInfo_t getClientAtIndex(DWORD index) override;
 

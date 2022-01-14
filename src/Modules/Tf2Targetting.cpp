@@ -1,8 +1,15 @@
 #include "Tf2Targetting.h"
 
 // todo: Create "Threaded" abstraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tf2Targetting::Tf2Targetting(Process* process, Tf2Tracking* tracking, DWORD localPlayerBase, DWORD entListBase)
+// todo: Abstract class for all threaded classes to inherit from
+Tf2Targetting::Tf2Targetting(IOffset* offsets, Process* process,
+                             Tf2Tracking* tracking, Local* local,
+                             Screen* screen,
+                             DWORD localPlayerBase, DWORD entListBase)
 {
+	offsets_ = offsets;
+	local_ = local;
+	screen_ = screen;
 	process_ = process;
 	tracking_ = tracking;
 	entityListBase_ = entListBase;
@@ -43,18 +50,20 @@ void Tf2Targetting::openThread()
 
 void Tf2Targetting::pause()
 {
-	tracking_->pause();
-	// if (paused_) return;
-	// WaitForSingleObject(mutex_, INFINITE);
-	// paused_ = true;
+	// tracking_->pause();
+	if (paused_) return;
+	WaitForSingleObject(mutex_, INFINITE);
+	printf("Auto re-Targetting paused\n");
+	paused_ = true;
 }
 
 void Tf2Targetting::resume()
 {
-	tracking_->resume();
-	// if (!paused_) return;
-	// ReleaseMutex(mutex_);
-	// paused_ = false;
+	// tracking_->resume();
+	if (!paused_) return;
+	paused_ = false;
+	printf("Auto re-Targetting resumed\n");
+	ReleaseMutex(mutex_);
 }
 
 // todo: duplicate code between this and Tf2Tracking
@@ -77,10 +86,11 @@ void Tf2Targetting::extSwitchToPrevTarget()
 
 void Tf2Targetting::mainLoop()
 {
+	// todo: use fov maybe??
 	WaitForSingleObject(mutex_, INFINITE);
-	while (1)
+	while (!terminateThread_)
 	{
-		while (isGoodTarget(bestTargetBase_))
+		while (isGoodTarget(bestTargetBase_) && !terminateThread_)
 		{
 			// todo: this should switch after killing target
 			ReleaseMutex(mutex_);
@@ -116,6 +126,77 @@ void Tf2Targetting::switchTarget(void (*getNewTarget)(Tf2Targetting*))
 	bestTargetBase_ = client.entity;
 }
 
+// todo: fix duplicate code....
+bool Tf2Targetting::targetPlayerInFov()
+{
+	LocalCoords_t local = local_->getLocalCoordinate();
+	ClientInfo_t client = {0};
+	Entity_t playerEnt = {0};
+	DWORD newBestTargetBase = 0;
+	float shortestDistance = -1.0f;
+	float newDistance = -1.0f;
+	DWORD newTargetIndex = 0;
+	Vec3_t playerPos = {0};
+
+	for (DWORD i = 0; i < MAX_PLAYERS; ++i)
+	{
+		client = getClientAtIndex(i);
+		//todo: use W2S to check if he is in FOV;
+		if (isGoodTarget(client.entity))
+		{
+			// printf("is good target\n");
+			process_->readAddress(client.entity, (BYTE*)&playerEnt, sizeof(playerEnt));
+			playerPos = {playerEnt.x5, playerEnt.y5, playerEnt.z5 + Z_COMPENSATION};
+
+
+			if (isInFov(playerPos))
+			{
+				newDistance = Geometry_.calculateDistance(
+					{local.x, local.y, local.z}, playerPos);
+
+				if (shortestDistance < 0 ||
+					newDistance < shortestDistance)
+				{
+					newBestTargetBase = client.entity;
+					shortestDistance = newDistance;
+					newTargetIndex = i;
+				}
+			}
+		}
+	}
+
+	if (newBestTargetBase)
+	{
+		bestTargetBase_ = newBestTargetBase;
+		targetPlayerIndex_ = newTargetIndex;
+		tracking_->setTargetBase(bestTargetBase_);
+		return true;
+	}
+	return false;
+}
+
+bool Tf2Targetting::isInFov(Vec3_t playerPos)
+{
+	int halfWidth = screen_->width_ / 2;
+	int halfHeight = screen_->height_ / 2;
+	int halfFov = screen_->aimbotFov_ / 2;
+
+	int x1 = halfWidth - halfFov;
+	int y1 = halfHeight - halfFov;
+
+	int x2 = halfWidth + halfFov;
+	int y2 = halfHeight + halfFov;
+
+	float viewMatrix[16] = {0};
+	process_->readAddress(offsets_->engineBase() + VIEW_MATRIX_OFFSET, (BYTE*)&viewMatrix, sizeof(viewMatrix));
+	Vec2_t pos = Geometry_.worldToScreen(playerPos, (float*)viewMatrix, screen_);
+
+
+	return pos.x >= x1 && pos.x <= x2 &&
+		pos.y >= y1 && pos.y <= y2; //stub
+}
+
+
 bool Tf2Targetting::isGoodTarget(DWORD targetBase)
 {
 	// todo: check origin vs bone position
@@ -136,14 +217,14 @@ bool Tf2Targetting::isGoodTarget(DWORD targetBase)
 	}
 
 	// Check distance between bone and origin.
-	BoneMatrix_t bonem;
-	const float threshold = 200.0f;
+	BoneMatrix_t bonem = {0};
+	const float threshold = 150.0f;
 	process_->readAddress(ent.boneMatrix, (BYTE*)&bonem, sizeof(bonem));
 
-	float dx = ent.x5 - bonem.headx;
-	float dy = ent.y5 - bonem.heady;
+	float dx = ent.x5 - bonem.x;
+	float dy = ent.y5 - bonem.y;
 	float distance = sqrt(dx * dx + dy * dy);
-	
+
 	return distance <= threshold;
 }
 
@@ -163,6 +244,7 @@ void Tf2Targetting::prevIndex(Tf2Targetting* obj)
 	obj->setTargetPlayerIndex(newIndex);
 }
 
+// todo: Duplicate code with Paint
 ClientInfo_t Tf2Targetting::getClientAtIndex(DWORD index)
 {
 	ClientInfo_t client;

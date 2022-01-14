@@ -15,51 +15,99 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Tf2Offset.cpp">
+    <ClCompile Include="src\Modules\Tf2Offset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Process.cpp">
+    <ClCompile Include="src\Modules\Process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tf2Aimbot.cpp">
+    <ClCompile Include="src\Modules\Tf2Hacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tf2OffsetV2.cpp">
+    <ClCompile Include="src\Modules\Tf2OffsetV2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tf2Tracking.cpp">
+    <ClCompile Include="src\Modules\Tf2Tracking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tf2Targetting.cpp">
+    <ClCompile Include="src\Modules\Tf2Targetting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Overlay\Tf2Overlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Overlay\Paint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Resources\Geometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Threads\Thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Overlay\overlay old\Tf2OverlayOld.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Overlay\overlay old\OldPaint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Tf2Offset.h">
+    <ClInclude Include="src\Modules\Tf2Offset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Process.h">
+    <ClInclude Include="src\Modules\Process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Tf2Aimbot.h">
+    <ClInclude Include="src\Modules\Tf2Hacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\IOffset.h">
+    <ClInclude Include="src\Modules\IOffset.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Tf2OffsetV2.h">
+    <ClInclude Include="src\Modules\Tf2OffsetV2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Tf2Tracking.h">
+    <ClInclude Include="src\Modules\Tf2Tracking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Tf2Targetting.h">
+    <ClInclude Include="src\Modules\Tf2Targetting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Structs.h">
+    <ClInclude Include="src\Resources\StructsAndResources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Overlay\Tf2Overlay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Overlay\Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Overlay\Paint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Resources\Geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Resources\Screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Threads\Thread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Threads\Threadable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Resources\Local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Overlay\overlay old\Tf2OverlayOld.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Overlay\overlay old\OldPaint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

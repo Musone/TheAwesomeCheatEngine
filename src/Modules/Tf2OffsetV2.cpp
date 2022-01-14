@@ -58,9 +58,9 @@ PlayerInfo_t Tf2OffsetV2::getLocalPlayerInfo()
 //
 // 	procManager_->readAddress(player.boneMatrixBase, (BYTE*)&bonem, sizeof(bonem));
 //
-// 	playerInfo.x = bonem.headx;
-// 	playerInfo.y = bonem.heady;
-// 	playerInfo.z = bonem.headz;
+// 	playerInfo.x = bonem.x;
+// 	playerInfo.y = bonem.y;
+// 	playerInfo.z = bonem.z;
 //
 // 	return playerInfo;
 // }

@@ -1,29 +1,33 @@
 #include <stdio.h>
 #include <ctype.h>
-// #include <windows.h>
+#include <windows.h>
 
 // #define _UNICODE 
 // #define UNICODE
 
-#include "Tf2Aimbot.h"
+#include "Modules/Tf2Hacks.h"
 
 using std::cin;
 using std::cout;
 
-void start()
+void start(HINSTANCE hInstance, int nCmdShow)
 {
-	Tf2Aimbot* aimbot;
-	aimbot = new Tf2Aimbot();
+	Tf2Hacks* aimbot;
+	aimbot = new Tf2Hacks(hInstance, nCmdShow);
 	aimbot->start();
 
 	delete aimbot;
 }
 
-int main()
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+                      _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
+                      _In_ int nCmdShow)
 {
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
+
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-
+	
 	//Resizing and formatting the window, it's important.
 	SetConsoleTitle(L"An Awesome Cheat Engine by Your mom, bech");
 	HWND window = GetConsoleWindow();
@@ -34,21 +38,21 @@ int main()
 	if (!FindWindow(NULL, L"Team Fortress 2"))
 	{
 		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
-		cout << "Please Open TF2" << endl;
+		// cout << "Please Open TF2" << endl;
 	}
-	
+
 	while (!FindWindow(NULL, L"Team Fortress 2")) { Sleep(500); }
-	
-	
-	cout << endl;
-	
+
+
+	// cout << endl;
+
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
-	cout << "TF2 has been found." << endl << endl;
+	// cout << "TF2 has been found." << endl << endl;
 	////////////////////////////////////////////////////////////////
 
-	start();
+	start(hInstance, nCmdShow);
 
-	cout << "Main says: Quitting, Cya!\n";
+	// cout << "Main says: Quitting, Cya!\n";
 	Sleep(300);
 	return 0;
 }

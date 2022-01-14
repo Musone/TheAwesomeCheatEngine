@@ -4,34 +4,16 @@
 
 #include "Process.h"
 #include "IOffset.h"
+#include "../Resources/StructsAndResources.h"
+#include "../Resources/Geometry.h"
+#include "../Resources/Local.h"
 
-#define PI 3.14159265
-
-
-typedef struct Coordinate
-{
-	float x;
-	float y;
-	float z;
-} Coordinate_t;
-
-
-typedef struct LocalShit
-{
-	float pitch;
-	float yaw;
-	float roll;
-	BYTE pad[96];
-	float x;
-	float y;
-	float z;
-} LocalShit_t;
-
+// #define PI 3.14159265
 
 class Tf2Tracking
 {
 public:
-	Tf2Tracking(Process* procManager, IOffset* gameManager);
+	Tf2Tracking(Process* procManager, IOffset* offsets, Local* local, DWORD engineBase);
 	~Tf2Tracking();
 
 	void pause();
@@ -41,22 +23,34 @@ public:
 	void setTargetBase(DWORD newTargetBase);
 
 	void toggleRageMode();
+	bool isRageMode() const { return rageMode_; };
 
-	Coordinate_t getTargetCoordinate();
-	LocalShit_t getLocalCoordinate();
+	Vec3_t getTargetCoordinate();
+	Vec3_t getPlayerCoordinate(DWORD playerBase);
+	// LocalCoords_t getLocalCoordinate();
+
+	// Vec3_t getAbsPlayerCoordinate(DWORD playerBase);
+	// Angle_t getAbsoluteAngle(Vec3_t player, LocalCoords_t local);
+	// Angle_t getRelativeAngle(Vec3_t player, LocalCoords_t local);
 
 protected:
 	void mainLoop();
 
 private:
-	Process* proc_ = 0;
+	const float smoothFactor_ = 3.0f;
+
+	DWORD engineBase_ = 0;
+
+	Process* process_ = 0;
 	IOffset* gameManager_ = 0;
+	Local* local_ = 0;
 	DWORD localPlayerBase_ = 0;
 	DWORD targetPlayerBase_ = 0;
 	DWORD targetBoneBase_ = 0;
 
 	PlayerInfo_t localPlayer = {0};
 	PlayerInfo_t targetPlayer = {0};
+	Geometry Geometry_;
 	float goalPitch_ = 0.0f;
 	float goalYaw_ = 0.0f;
 	float dx_ = 0.0f;
@@ -82,5 +76,5 @@ private:
 	void adjustAim();
 	void injectAngle(float pitch, float yaw);
 
-	void printVerbose();
+	// void printVerbose();
 };

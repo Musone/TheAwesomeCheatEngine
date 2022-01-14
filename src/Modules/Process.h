@@ -12,7 +12,7 @@
 
 class Process
 {
-	// todo: refactor the process manager
+	// todo: refactor the process_ manager
 public:
 	Process();
 	~Process();
@@ -23,7 +23,7 @@ public:
 	template <class cData>
 	cData readString(DWORD dwAddress);
 
-	void process(LPCWSTR ProcessName); //Return Handle To The process
+	void process(LPCWSTR ProcessName); //Return Handle To The process_
 	MODULEENTRY32 module(LPCWSTR ModuleName); // Return module Base Address
 
 	// todo: remove the unused garbage...
@@ -37,7 +37,7 @@ private:
 	DWORD dwPID = 0, dwProtection = 0, dwCaveAddress = 0;
 
 	// todo: this reads compares the our current position to the signature.
-	// todo: add safety for if you try to read outside of the VAS of the process.
+	// todo: add safety for if you try to read outside of the VAS of the process_.
 	bool sigEqual(BYTE* data, BYTE* sig, char* mask);
 
 	// MISC
