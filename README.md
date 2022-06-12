@@ -9,9 +9,12 @@ Currently, this cheat engine supports:
 
 Features:
   - Aimbot
-  
-Plans:
   - ESP
   - Overlay
   - Aim assist
-  - more to come!
+ 
+ Demos:
+  - https://www.youtube.com/watch?v=9DdLxm1kIbk&ab_channel=Musone
+  - https://www.youtube.com/watch?v=W2fGq5vrejA&ab_channel=Musone
+ 
+ More to come!
